@@ -124,3 +124,26 @@ Parsing rules:
 - Missing required file, unresolvable asset, unknown scene `type`, or duration
   mismatch ⇒ stop and report; do not render a partial/best-effort video silently.
 - Warnings (extra keys, orphan assets) ⇒ continue, but record them in the report.
+
+## 8. Source asset integrity (non-negotiable)
+
+User-provided source assets are **immutable**. Agents MUST NEVER replace, recreate,
+redraw, simplify, recolor, crop, re-encode, or otherwise modify a provided source
+image, logo, or graphic (`.svg`, `.png`, `.jpg`, `.webp`, `.gif`, …).
+
+- The bundle's `sources/` file is the asset of record. Render it **in place** (e.g.
+  Remotion `<Img src={staticFile(resolved)}/>`); never inline-substitute a redrawn
+  shape, traced path, text stand-in, or "cleaned up" copy.
+- If a source asset has background/padding issues (e.g. an opaque white bounding box,
+  built-in margins, or a mismatched matte), fix it **in the container, not the file**:
+  - match or fill the container background so the asset's matte disappears;
+  - place it on a clean rounded badge/card with a matching surface colour;
+  - use a soft drop-shadow, rounded clip, or CSS mask to seat it correctly;
+  - scale/fit with `object-fit: contain` rather than cropping the source.
+- Do not strip, flatten, recolor, or minify the asset to "fix" it — and never fetch a
+  replacement from the web.
+- Only the original Producer-provided file may be rendered; if a genuine edit is
+  required, flag it and hand off to the Producer instead of editing the asset.
+
+This rule applies to every bundle's `sources/**`, including logos referenced by
+`content.json` `media` fields.

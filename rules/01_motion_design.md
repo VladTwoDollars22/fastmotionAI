@@ -225,3 +225,27 @@ designed to the frame budget (rule 04 §6):
   storms over many paths.
 - Per-beat element counts (particles, lines, satellites) are capped to the budget and
   scaled down automatically during preview.
+
+## 16. Ultra-dynamic motion & fluid transitions (mandatory)
+
+Static holds are a defect. Every scene MUST feel alive for its entire duration:
+
+- **Continuous micro-interactions.** No element is ever fully at rest while on screen:
+  ambient breathing, subtle drift, hover lifts, underline draws, icon ticks, glow pulses,
+  and counter/gauge motion keep focal elements alive. Layer these under the hero motion,
+  never instead of it.
+- **Scale-punches on impact.** Every meaningful reveal, cut, click, and value change lands
+  with a damped scale-punch (`dampedImpulse` / snappy spring, ~1.02–1.08 peak) that decays
+  smoothly — never a flat appearance.
+- **Fluid morphing / sliding.** Elements transition by morph (shape/position/scale) or a
+  continuous slide along a path; lists reflow with spring-staggered layout, cards glide
+  between states, containers liquid-morph rather than swapping instantly (rule 01 §8/§14).
+- **Spring-driven staggered entries.** Multi-element entrances use explicit `fps` + `config`
+  springs with a small stagger (rule 01 §4); no simultaneous pops, no linear fades-in.
+- **Living depth & parallax.** Foreground/midground/background layers move at different
+  rates (parallax), and layouts reflow dynamically during transitions instead of holding a
+  fixed composition (rule 01 §7/§13).
+
+Scope note: a per-brief camera constraint (e.g. "impact-only shake on specific frames")
+overrides the ambient-camera reading of this rule, but the micro-interaction, punch,
+morph/slide, and stagger requirements still apply in full.

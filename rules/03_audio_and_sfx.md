@@ -105,6 +105,20 @@ placement with pitch modulation.
 - Normalize loud SFX to ~−6 dBFS; never clip by stacking.
 - Max one loud transient per 4–6 frames; cull duplicates.
 
+## 5.1 — Refined, soft & balanced SFX character (mandatory)
+
+The mix must read **high-end SaaS**: enriched, never harsh, never fatiguing.
+
+- SFX MUST be **pleasant, soft, and balanced** — not overly harsh, loud, or brittle.
+- Preferred palette: **high-frequency tactile clicks**, **warm UI pops**, **soft smooth
+  whooshes**, and **subtle chimes** that sit under the visuals.
+- Tame harshness: roll off piercing highs, soften transients, and keep any distortion,
+  bitcrush, or sub-bass to brief, motivated moments only (never a constant wall of noise).
+- Keep SFX gain below the music/narration bed changes; leave headroom (peaks ≲ −6 dBFS,
+  no clipping) and prefer shorter, quieter cues over loud ones.
+- Match the audio's quality to the visual polish — a pristine 4K-clean UI deserves clean,
+  de-essed, well-rounded sound design, not stock "beeps".
+
 ## 6. Cinematic Audio Architecture (MANDATORY layering)
 
 Sound design is a **layer stack** aligned to the visual beat sheet. Every scene MUST

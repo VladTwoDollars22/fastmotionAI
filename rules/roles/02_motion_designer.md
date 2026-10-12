@@ -80,6 +80,50 @@ Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while s
   `<PlaySfxTrack>` / `<PlayMusic>` helpers — never a hardcoded path.
 - **Ambient layer required.** Every export ships synchronized SFX plus an ambient
   music bed (§0) — silent videos are forbidden.
+- **Refined & soft.** SFX MUST be pleasant, soft, and balanced — high-frequency tactile
+  clicks, warm UI pops, soft smooth whooshes, subtle chimes. Never harsh, brittle, or
+  loud; keep peaks ≲ −6 dBFS with headroom (`rules/03` §5.1).
+
+---
+
+## 3.2 — STRICT ASSET INTEGRITY (non-negotiable)
+
+User-provided source assets are **immutable**. You MUST NEVER replace, recreate,
+redraw, simplify, recolor, crop, or otherwise modify a provided source image, logo, or
+graphic (`.svg`, `.png`, `.jpg`, `.webp`, …).
+
+- Render the bundle's original file in place (e.g. Remotion `<Img src={staticFile(...)}/>`);
+  never substitute a redrawn path, traced shape, text stand-in, or "cleaned" copy, and
+  never fetch a replacement.
+- If the asset has background/padding issues (opaque white bounding box, built-in
+  margins, mismatched matte), fix it **in the container, never the file**:
+  - match/fill the container background so the matte disappears;
+  - seat it on a clean rounded badge/card with a matching surface colour;
+  - use a soft drop-shadow, rounded clip, or CSS mask;
+  - fit with `object-fit: contain` (scale, don't crop).
+- Genuine edits are out of scope: flag them and hand off to the Producer.
+
+See `rules/02_project_bundle_parsing.md` §8.
+
+---
+
+## 3.3 — ULTRA-DYNAMIC MOTION & FLUID TRANSITIONS (mandatory)
+
+Scenes must feel alive end-to-end; static holds are a defect (rule 01 §16).
+
+- **Continuous micro-interactions.** Keep focal elements breathing (ambient drift, hover
+  lifts, underline draws, glow pulses, counter motion) under the hero motion.
+- **Scale-punches.** Land every reveal, cut, click, and value change with a damped
+  scale-punch (~1.02–1.08 peak) that decays smoothly.
+- **Fluid morph / slide + reflow.** Elements transition by morph or continuous slide, lists
+  reflow with spring-staggered layout, containers liquid-morph instead of swapping.
+- **Parallax & living depth.** Fore/mid/background layers move at different rates and
+  layouts reflow during transitions rather than holding a frozen composition.
+- **Spring-staggered entries.** Every multi-element entrance uses explicit `fps` + `config`
+  springs with a small stagger — no simultaneous pops or linear fades.
+
+A per-brief camera constraint (e.g. impact-only shake) overrides only the ambient-camera
+reading; the micro-interaction, punch, morph/slide, and stagger requirements still apply.
 
 ---
 
@@ -115,6 +159,11 @@ Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while s
     and inputs, whooshes/sweeps on transitions, impacts on error/warning reveals,
     rising chimes/ticks on gauges, counters and checkmarks — sourced from the bundle or
     the shared SFX library. Silent scenes are a defect.
+12. **Protect source assets (§3.2).** Render user-provided images/logos verbatim and fix
+    any background/padding issue via container styling — never by editing the asset file.
+13. **Keep every frame dynamic (§3.3).** Continuous micro-interactions, scale-punches,
+    fluid morph/slide + layout reflow, parallax depth, and spring-staggered entries — no
+    static holds (rule 01 §16).
 
 ---
 
@@ -138,6 +187,12 @@ Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while s
       is never silent.
 - [ ] Any downloaded/generated audio lives in `public/assets/audio/sfx|music/` with a
       standardized `base_variant` name and is registered in `src/utils/audioLibrary.ts`.
+- [ ] Source assets rendered verbatim; any background/padding issue fixed by container
+      styling only — no asset file was replaced, redrawn, or restyled (§3.2).
+- [ ] No static holds: continuous micro-interactions, scale-punches, fluid morph/slide +
+      reflow, parallax depth, and spring-staggered entries are present (§3.3, rule 01 §16).
+- [ ] SFX are soft, balanced, and pleasant (peaks ≲ −6 dBFS, no harsh/brittle transients)
+      (§3.1, `rules/03` §5.1).
 - [ ] Repeated meshes instanced; heavy math memoized; preview tier respected.
 - [ ] `npx tsc --noEmit` (and `npm run lint`) is clean.
 - [ ] Visual sanity check via `npx remotion still MainVideo output/preview.png --frame=60`
