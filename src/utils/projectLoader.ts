@@ -119,11 +119,15 @@ export interface LoadedProject {
 export const ASSET_PREFIX = "bundles";
 export const PROJECT_IDS: string[] = Object.keys(BUNDLE_REGISTRY);
 
-/** Preferred reference bundle; used as the fallback when a requested id is absent. */
-export const PREFERRED_DEFAULT_PROJECT_ID = "_template";
+/**
+ * Preferred showcase bundle; used as the fallback when a requested id is absent
+ * or undefined (so `MainVideo` never renders the dummy `_template` bundle).
+ */
+export const PREFERRED_DEFAULT_PROJECT_ID =
+  "project_2026_10_12_freelance_chaos_to_order";
 
 /**
- * A safe default bundle id that always resolves: `_template` when present,
+ * A safe default bundle id that always resolves: the showcase bundle when present,
  * otherwise the first available bundle. Empty only when no bundles exist at all.
  * This keeps clean clones (where project-specific bundles are git-ignored) renderable.
  */

@@ -66,7 +66,12 @@ export interface Palette {
   primary: string;
   accent: string;
   text: string;
+  muted: string;
   gold: string;
+  cream: string;
+  /** Crimson "problem" mass (brief: dark spiky crimson-edged knot). */
+  crimson: string;
+  nearBlack: string;
   energy: number;
 }
 
@@ -77,7 +82,11 @@ export const FALLBACK_PALETTE: Palette = {
   primary: "#FF2E63",
   accent: "#22D3EE",
   text: "#EAFBFF",
+  muted: "#8E9BC8",
   gold: "#FFD466",
+  cream: "#FDF3E3",
+  crimson: "#FF2E4D",
+  nearBlack: "#0A0A12",
   energy: 1,
 };
 
@@ -96,6 +105,12 @@ export const buildPalette = (styleguide: Styleguide): Palette => {
     candidateChaos.length === 5 ? candidateChaos : FALLBACK_PALETTE.chaos;
   const gold =
     styleguide.palette?.resolution?.gold ?? styleguide.colors.accent;
+  const cream =
+    styleguide.palette?.resolution?.cream ?? styleguide.colors.text;
+  const crimson =
+    styleguide.palette?.problem?.crimson ?? FALLBACK_PALETTE.crimson;
+  const nearBlack =
+    styleguide.palette?.problem?.nearBlack ?? FALLBACK_PALETTE.nearBlack;
   const order = [
     styleguide.colors.accent,
     styleguide.colors.primary,
@@ -111,7 +126,11 @@ export const buildPalette = (styleguide: Styleguide): Palette => {
     primary: styleguide.colors.primary,
     accent: styleguide.colors.accent,
     text: styleguide.colors.text,
+    muted: styleguide.colors.muted,
     gold,
+    cream,
+    crimson,
+    nearBlack,
     energy: energyFactor(styleguide.motion.speed),
   };
 };

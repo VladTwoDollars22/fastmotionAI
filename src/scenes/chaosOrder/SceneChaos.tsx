@@ -1,7 +1,12 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC, ReactNode } from "react";
 import { useMemo } from "react";
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import {
+  AbsoluteFill,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { GlowOverlay } from "../../components/ui/GlowOverlay";
 import { KineticText } from "../../components/ui/KineticText";
 import { OrganicBlob } from "../../components/ui/OrganicBlob";
@@ -74,6 +79,75 @@ const TextRow: FC<{ top: number; scale: number; children: ReactNode }> = ({
   </div>
 );
 
+/**
+ * The five freelancers' signature props from the brief: Coral + stylus,
+ * Electric Blue + brackets, Amber + megaphone, Mint + pencil, Violet + bar chart.
+ */
+const FreelancerProp: FC<{
+  index: number;
+  x: number;
+  y: number;
+  rotation: number;
+  scale: number;
+  opacity: number;
+  palette: Palette;
+}> = ({ index, x, y, rotation, scale, opacity, palette }) => {
+  const stroke = palette.cream;
+  const accent = palette.chaos[index % palette.chaos.length];
+  const line = {
+    stroke,
+    strokeWidth: 3,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    fill: "none",
+  };
+  return (
+    <g
+      transform={`translate(${x} ${y}) rotate(${rotation}) scale(${scale})`}
+      opacity={opacity}
+    >
+      {index === 0 ? (
+        <>
+          <line x1={-16} y1={16} x2={12} y2={-12} {...line} />
+          <path d="M 12 -12 L 22 -18 L 26 -14 L 16 -4 Z" fill={accent} stroke={stroke} strokeWidth={2} />
+        </>
+      ) : index === 1 ? (
+        <>
+          <path d="M -6 -18 L -20 0 L -6 18" {...line} />
+          <path d="M 6 -18 L 20 0 L 6 18" {...line} />
+        </>
+      ) : index === 2 ? (
+        <>
+          <path d="M -20 8 L -2 -8 L 16 -14 L 16 14 L -2 8 Z" fill={accent} stroke={stroke} strokeWidth={2} />
+          <path d="M 22 -6 A 14 14 0 0 1 22 -22" {...line} />
+          <path d="M 30 -2 A 22 22 0 0 1 30 -30" {...line} />
+        </>
+      ) : index === 3 ? (
+        <>
+          <rect x={-18} y={-8} width={34} height={16} rx={3} fill={accent} stroke={stroke} strokeWidth={2} />
+          <path d="M 16 -8 L 26 0 L 16 8 Z" fill={stroke} />
+        </>
+      ) : (
+        <>
+          {[0, 1, 2].map((bar) => (
+            <rect
+              key={bar}
+              x={-18 + bar * 13}
+              y={2 - bar * 6}
+              width={9}
+              height={16 + bar * 6}
+              rx={2}
+              fill={accent}
+              stroke={stroke}
+              strokeWidth={2}
+            />
+          ))}
+        </>
+      )}
+    </g>
+  );
+};
+
 export interface SceneChaosProps {
   palette: Palette;
   energy: number;
@@ -88,6 +162,7 @@ export const SceneChaos: FC<SceneChaosProps> = ({
   springs,
 }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const time = (frame / 30) * energy;
 
   const gridOpacity = smoothstep(0, 24, frame) * 0.45;
@@ -116,12 +191,43 @@ export const SceneChaos: FC<SceneChaosProps> = ({
 
   const angles = useMemo(() => spikeAngles(SPIKE_COUNT, "spike-a"), []);
 
-  // Compute each anchor's drifted position once per frame (shared by the tendrils
-  // and the blobs) instead of calling noise2D twice for the same index.
-  const anchors = CHAOS_HOMES.map((home, index) => ({
-    x: home.x + noise2D(`bx${index}`, time, index) * 30,
-    y: home.y + noise2D(`by${index}`, time, index * 2) * 30,
-  }));
+  // Blobs hold their corners with a *bounded* orbit swing (never a full spin),
+  // then ease outward as the crimson knot bursts. The final centre is clamped to
+  // the 1080x1920 safe area so no blob (or its prop) ever clips the frame edge.
+  const orbitSwing = 0.24 * Math.sin(time * 0.9);
+  const shrink = smoothstep(120, 148, frame);
+  const outward = 1 + shrink * 0.7;
+
+  const clamp = (value: number, min: number, max: number): number =>
+    Math.min(max, Math.max(min, value));
+
+  // Compute each anchor's orbited + drifted position once per frame (shared by
+  // tendrils, blobs and their freelancer props) instead of sampling noise twice.
+  const anchors = CHAOS_HOMES.map((home, index) => {
+    const dx = home.x - CHAOS_CENTER.x;
+    const dy = home.y - CHAOS_CENTER.y;
+    const baseR = Math.hypot(dx, dy) || 1;
+    const baseA = Math.atan2(dy, dx);
+    const dir = index % 2 === 0 ? 1 : -1;
+    const a = baseA + orbitSwing * dir;
+    const radius = index === 4 ? 96 : 78;
+    const r = baseR * 0.94 * outward * (1 + 0.03 * Math.sin(time * 1.3 + index));
+    const padX = 120 + radius;
+    const padTop = 180 + radius;
+    // Keep the bottom row clear of the persistent brand pill (y ~1606+).
+    const padBottom = 430;
+    const x = clamp(
+      CHAOS_CENTER.x + Math.cos(a) * r + noise2D(`bx${index}`, time, index) * 26,
+      padX,
+      1080 - padX,
+    );
+    const y = clamp(
+      CHAOS_CENTER.y + Math.sin(a) * r + noise2D(`by${index}`, time, index * 2) * 26,
+      padTop,
+      1920 - padBottom,
+    );
+    return { x, y, nx: Math.cos(a), ny: Math.sin(a), r: radius };
+  });
 
   const cardJitterX = noise2D("card-x", time * 3.1, 0) * (2 + caStrength * 10);
   const cardJitterY = noise2D("card-y", time * 3.4, 1) * (2 + caStrength * 10);
@@ -157,7 +263,7 @@ export const SceneChaos: FC<SceneChaosProps> = ({
               key={`b${index}`}
               cx={anchor.x}
               cy={anchor.y}
-              r={index === 4 ? 96 : 78}
+              r={anchor.r * (1 - shrink * 0.55)}
               color={palette.chaos[index]}
               seed={`blob${index}`}
               speed={(1.1 + index * 0.1) * energy}
@@ -165,8 +271,21 @@ export const SceneChaos: FC<SceneChaosProps> = ({
               spin={6 + index * 2}
               delay={index * 5}
               glow={26}
-              opacity={0.9}
+              opacity={0.9 * (1 - shrink * 0.85)}
               physics={springs.entrance}
+            />
+          ))}
+
+          {anchors.map((anchor, index) => (
+            <FreelancerProp
+              key={`p${index}`}
+              index={index}
+              x={clamp(anchor.x + anchor.nx * (anchor.r + 30), 150, 930)}
+              y={clamp(anchor.y + anchor.ny * (anchor.r + 30), 250, 1550)}
+              rotation={spin(frame, `prop${index}`, 12 + index * 3, 0.5)}
+              scale={0.95 * (1 - shrink * 0.6)}
+              opacity={0.95 * (1 - shrink * 0.9)}
+              palette={palette}
             />
           ))}
 
@@ -199,32 +318,65 @@ export const SceneChaos: FC<SceneChaosProps> = ({
                   <path
                     key={`s${index}`}
                     d={`M ${p1.x} ${p1.y} L ${p3.x} ${p3.y} L ${p2.x} ${p2.y} Z`}
-                    fill={index % 2 === 0 ? palette.chaos[0] : palette.chaos[1]}
+                    fill={index % 2 === 0 ? palette.crimson : palette.nearBlack}
+                    stroke={palette.crimson}
+                    strokeWidth={2}
                     opacity={spikeFade * flicker * 0.85}
                   />
                 );
               })
             : null}
 
+          {spikeGrow > 0 ? (
+            <g opacity={spikeFade}>
+              <circle
+                cx={CHAOS_CENTER.x}
+                cy={CHAOS_CENTER.y}
+                r={spikeGrow * 86}
+                fill={palette.nearBlack}
+                stroke={palette.crimson}
+                strokeWidth={4}
+              />
+              <circle
+                cx={CHAOS_CENTER.x}
+                cy={CHAOS_CENTER.y}
+                r={spikeGrow * 54}
+                fill="none"
+                stroke={palette.crimson}
+                strokeWidth={2}
+                opacity={0.7}
+              />
+            </g>
+          ) : null}
+
           {[100, 117].map((start, index) => {
-            const d = frame - start;
-            if (d < 0 || d > 36) return null;
+            const local = frame - start;
+            if (local < 0) return null;
+            // Snappy-accent spring envelope on the impact rings.
+            const progress = spring({
+              frame: local,
+              fps,
+              config: springs.accent,
+              from: 0,
+              to: 1,
+            });
+            if (progress > 0.999) return null;
             return (
               <circle
                 key={`w${index}`}
                 cx={CHAOS_CENTER.x}
                 cy={CHAOS_CENTER.y}
-                r={d * 27}
+                r={progress * (index === 0 ? 300 : 260)}
                 fill="none"
-                stroke={index === 0 ? palette.chaos[1] : palette.chaos[3]}
-                strokeWidth={7 - index * 3}
-                opacity={Math.max(0, 1 - d / 36) * 0.6}
+                stroke={index === 0 ? palette.crimson : palette.gold}
+                strokeWidth={(3 - index) * 3}
+                opacity={(1 - progress) * 0.6}
               />
             );
           })}
 
           <SpeedLines
-            color={palette.gold}
+            color={palette.crimson}
             delay={100}
             durationInFrames={20}
             cx={CHAOS_CENTER.x}
@@ -238,8 +390,8 @@ export const SceneChaos: FC<SceneChaosProps> = ({
             count={70}
             delay={100}
             durationInFrames={42}
-            color={palette.chaos[0]}
-            color2={palette.chaos[1]}
+            color={palette.crimson}
+            color2={palette.primary}
             spread={560}
             mode="lines"
             lineLength={54}
@@ -252,8 +404,8 @@ export const SceneChaos: FC<SceneChaosProps> = ({
             count={120}
             delay={104}
             durationInFrames={64}
-            color={palette.gold}
-            color2={palette.chaos[3]}
+            color={palette.crimson}
+            color2={palette.gold}
             spread={660}
             mode="dust"
             size={5}

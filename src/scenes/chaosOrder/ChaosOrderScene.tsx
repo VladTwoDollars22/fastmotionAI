@@ -50,6 +50,62 @@ const BOKEH = [
   { x: 540, y: 940, r: 240, ci: 2 },
 ];
 
+/** Persistent brand pill (brief: "Chaos to Order"), breathing so it is never static. */
+const BrandPill: FC<{ label: string; palette: Palette }> = ({ label, palette }) => {
+  const frame = useCurrentFrame();
+  const bob = floatOffset(frame, "brand-pill", 4, 5, 0.6);
+  const glow = 0.55 + 0.25 * Math.sin((frame / 30) * 1.6);
+  const appear = smoothstep(6, 26, frame);
+  return (
+    <AbsoluteFill
+      style={{
+        justifyContent: "flex-end",
+        alignItems: "center",
+        paddingBottom: 250,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        style={{
+          transform: `translate(${bob.x}px, ${bob.y}px) scale(${0.9 + 0.1 * appear})`,
+          opacity: appear,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "16px 34px",
+          borderRadius: 999,
+          border: `1.5px solid ${palette.accent}aa`,
+          background:
+            "linear-gradient(120deg, rgba(255,255,255,0.10), rgba(10,12,30,0.55))",
+          boxShadow: `0 0 ${18 + glow * 26}px ${palette.accent}66`,
+        }}
+      >
+        <span
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 999,
+            background: palette.accent,
+            boxShadow: `0 0 14px ${palette.accent}`,
+            opacity: glow,
+          }}
+        />
+        <span
+          style={{
+            color: palette.cream,
+            fontSize: 30,
+            fontWeight: 700,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+          }}
+        >
+          {label}
+        </span>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export interface ChaosOrderSceneProps {
   projectId?: string;
 }
@@ -131,13 +187,23 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
   const shake = shakeOffset(frame, SHAKES);
   const shakeAmp = Math.hypot(shake.x, shake.y);
 
+  // Camera dolly: the Chaos tail pushes in on the knot burst, then Scene 2 pulls
+  // back smoothly to reveal the resolved hero. Continuous across the cut (§14).
+  const dolly =
+    frame < SCENE_FRAMES
+      ? 1 + 0.08 * smoothstep(SCENE_FRAMES - 30, SCENE_FRAMES, frame)
+      : 1 + 0.08 * (1 - smoothstep(SCENE_FRAMES, SCENE_FRAMES + 110, frame));
+
+  const fontFamily = `${project.styleguide.fonts.heading}, ${project.styleguide.fonts.body}, system-ui, sans-serif`;
+  const brandPill = project.styleguide.brand;
+
   const bgX = cam.x * -0.4;
   const bgY = cam.y * -0.4;
   const fgX = cam.x * 1.6;
   const fgY = cam.y * 1.7;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.background }}>
+    <AbsoluteFill style={{ backgroundColor: palette.background, fontFamily }}>
       <AbsoluteFill
         style={{ transform: `scale(1.14) translate(${bgX}px, ${bgY}px)` }}
       >
@@ -154,7 +220,7 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
 
       <AbsoluteFill
         style={{
-          transform: `translate(${cam.x}px, ${cam.y}px) rotate(${cam.roll}deg) scale(${cam.zoom * 1.08})`,
+          transform: `translate(${cam.x}px, ${cam.y}px) rotate(${cam.roll}deg) scale(${cam.zoom * 1.08 * dolly})`,
         }}
       >
         {acts.map((scene, index) => {
@@ -215,7 +281,10 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
         />
 
         <PaperGrain opacity={0.09} />
+        <PaperGrain opacity={0.05} scale={92} speed={1.7} blend="soft-light" />
       </AbsoluteFill>
+
+      <BrandPill label={brandPill} palette={palette} />
 
       <AudioEngine
         musicSrc={musicSrc}

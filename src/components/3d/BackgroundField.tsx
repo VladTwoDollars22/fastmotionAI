@@ -30,6 +30,8 @@ export interface BackgroundFieldProps {
   caX?: number;
   caY?: number;
   grain?: number;
+  /** Ambient 3D grid lines that shift in depth (rule 01 §13). Default on. */
+  grid?: boolean;
   /** "auto" (default) = full quality while rendering, light during Studio preview. */
   quality?: FieldQuality;
   /** When false, the (expensive) EffectComposer post pipeline is skipped entirely. */
@@ -47,6 +49,7 @@ interface FieldProps {
   caX: number;
   caY: number;
   grain: number;
+  grid: boolean;
   usePost: boolean;
 }
 
@@ -69,6 +72,7 @@ const Field: FC<FieldProps> = ({
   caX,
   caY,
   grain,
+  grid,
   usePost,
 }) => {
   const frame = useCurrentFrame();
@@ -93,6 +97,7 @@ const Field: FC<FieldProps> = ({
   const offset = useMemo(() => new THREE.Vector2(caX, caY), [caX, caY]);
   const tintA = lerpHex(particleColor, accentColor, mood);
   const tintB = lerpHex(accentColor, particleColor, mood);
+  const gridTint = lerpHex(background, accentColor, 0.24);
 
   return (
     <>
@@ -131,6 +136,20 @@ const Field: FC<FieldProps> = ({
         </points>
       </group>
 
+      {grid ? (
+        <>
+          <group position={[0, -7, (time * 0.5) % 4 - 2]}>
+            <gridHelper args={[64, 32, gridTint, gridTint]} rotation={[0, time * 0.05, 0]} />
+          </group>
+          <group position={[0, 7, (time * 0.42 + 2) % 4 - 2]}>
+            <gridHelper
+              args={[64, 32, gridTint, gridTint]}
+              rotation={[0, -time * 0.04, 0]}
+            />
+          </group>
+        </>
+      ) : null}
+
       {usePost ? (
         <EffectComposer multisampling={0}>
           <Bloom
@@ -165,6 +184,7 @@ export const BackgroundField: FC<BackgroundFieldProps> = ({
   caX = 0.0012,
   caY = 0.0008,
   grain = 0.12,
+  grid = true,
   quality = "auto",
   postFx = true,
   className,
@@ -191,6 +211,7 @@ export const BackgroundField: FC<BackgroundFieldProps> = ({
           caX={caX}
           caY={caY}
           grain={grain}
+          grid={grid}
           usePost={highQuality && postFx}
         />
       </Canvas>

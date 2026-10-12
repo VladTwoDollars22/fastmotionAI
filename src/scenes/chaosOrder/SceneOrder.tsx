@@ -1,7 +1,13 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import { useMemo } from "react";
-import { AbsoluteFill, getRemotionEnvironment, useCurrentFrame } from "remotion";
+import {
+  AbsoluteFill,
+  getRemotionEnvironment,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { GlowOverlay } from "../../components/ui/GlowOverlay";
 import { KineticText } from "../../components/ui/KineticText";
 import {
@@ -48,6 +54,7 @@ export const SceneOrder: FC<SceneOrderProps> = ({
   springs,
 }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const { isRendering } = getRemotionEnvironment();
   const time = (frame / 30) * energy;
 
@@ -56,7 +63,21 @@ export const SceneOrder: FC<SceneOrderProps> = ({
   const laserFade = 1 - smoothstep(16, 36, frame);
   const shatterP = smoothstep(10, 24, frame);
   const cardP = smoothstep(58, 84, frame);
-  const checkP = smoothstep(70, 88, frame);
+  // Snappy-accent spring drives the checkmark draw (micro-interaction, rule 01 §4).
+  const checkP = spring({
+    frame: Math.max(0, frame - 66),
+    fps,
+    config: springs.accent,
+    from: 0,
+    to: 1,
+  });
+  const corePop = spring({
+    frame: Math.max(0, frame - 54),
+    fps,
+    config: springs.accent,
+    from: 0,
+    to: 1,
+  });
   const graphP = smoothstep(78, 102, frame);
   const sweepP = frame >= 58 ? (((frame - 58) % 46) / 46) : 0;
   const flash = frame >= 8 && frame <= 16 ? (1 - (frame - 8) / 8) * 0.4 : 0;
@@ -112,7 +133,9 @@ export const SceneOrder: FC<SceneOrderProps> = ({
               <path
                 key={`s${index}`}
                 d={`M ${p1.x} ${p1.y} L ${p3.x} ${p3.y} L ${p2.x} ${p2.y} Z`}
-                fill={index % 2 === 0 ? palette.chaos[0] : palette.chaos[1]}
+                fill={index % 2 === 0 ? palette.crimson : palette.nearBlack}
+                stroke={palette.crimson}
+                strokeWidth={2}
                 opacity={spikeOpacity * (0.5 + 0.5 * Math.abs(noise2D("of", index, time * 5)))}
               />
             );
@@ -139,6 +162,31 @@ export const SceneOrder: FC<SceneOrderProps> = ({
           })}
 
           <Metaballs id="order-goo" blobs={blobs} opacity={0.95} seed="order" speed={energy} />
+
+          {mergeP > 0 ? (
+            <g opacity={mergeP}>
+              <circle
+                cx={CHAOS_CENTER.x}
+                cy={CHAOS_CENTER.y}
+                r={(26 + 44 * corePop) * (1 + 0.08 * Math.sin(time * 3))}
+                fill={palette.accent}
+                style={
+                  isRendering
+                    ? { filter: `drop-shadow(0 0 30px ${palette.accent})` }
+                    : undefined
+                }
+              />
+              <circle
+                cx={CHAOS_CENTER.x}
+                cy={CHAOS_CENTER.y}
+                r={(26 + 44 * corePop) * 1.6 * (1 + 0.1 * Math.sin(time * 3 + 1))}
+                fill="none"
+                stroke={palette.cream}
+                strokeWidth={3}
+                opacity={0.5}
+              />
+            </g>
+          ) : null}
 
           {mergeP > 0
             ? palette.order.map((color, index) => {
@@ -217,11 +265,11 @@ export const SceneOrder: FC<SceneOrderProps> = ({
         style={{
           position: "absolute",
           top: CHAOS_CENTER.y - 4,
-          left: "50%",
-          width: `${laserP * 130}%`,
+          left: 0,
+          width: `${laserP * 100}%`,
           height: 7,
-          transform: "translateX(-50%)",
-          background: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${palette.text} 30%, ${palette.accent} 50%, ${palette.text} 70%, rgba(0,0,0,0) 100%)`,
+          transformOrigin: "left center",
+          background: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${palette.text} 70%, ${palette.accent} 100%)`,
           boxShadow: `0 0 44px 12px ${palette.accent}`,
           borderRadius: 6,
           opacity: laserFade,
