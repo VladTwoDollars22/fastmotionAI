@@ -4,12 +4,59 @@ Audio must be frame-accurate, stable across renders, and **cinematic** — a lay
 sound design, never an afterthought. Never use the host audio clock, timers, or the
 Web Audio API's real-time scheduling.
 
+## 0. MANDATORY AUDIO SFX PIPELINE (non-negotiable)
+
+Every generated video bundle MUST ship **dynamic Sound Effects (SFX) synchronized to
+visual motion beats**. Silent videos are strictly forbidden.
+
+REQUIRED SFX EVENTS:
+
+1. **UI Interactions** — snappy click/tap sounds on button presses and form inputs
+   (`click.mp3` / `pop.mp3`).
+2. **Scene Transitions & Motion** — smooth digital whooshes/sweeps during slide, scale,
+   or swipe scene changes (`whoosh.mp3` / `sweep.mp3`).
+3. **Impact & Alerts** — glitch error sounds or heavy bass-drops on warning/error
+   reveals (`glitch.mp3` / `impact.mp3`).
+4. **Success & Tickers** — rising-pitch chimes or ticking sounds on progress bars, score
+   counters (PageSpeed gauge tick), and checkmark reveals.
+
+Implementation:
+- Bind SFX with `@remotion/media-utils` or Remotion `<Audio />` tags, driven
+  **dynamically** from `content.json` (`sfx[].atFrame`) or from scene frame triggers —
+  never hardcoded seconds.
+- When a bundle declares no SFX assets, fall back to the shared SFX library
+  (`public/assets/audio/sfx/`, see §0.1/§1/§3) so every render still carries a
+  beat-locked soundtrack. Missing coverage is a build failure, not a silent render.
+
+## 0.1 — Reusable Sound Library, Naming & Asset Acquisition
+
+**Asset acquisition is permitted.** Agents MAY download, fetch, or generate
+**royalty-free, license-clear** clean UI SFX and ambient music (`.mp3` / `.wav`)
+whenever a bundle needs them.
+
+- **Mandatory location.** ALL downloaded or generated sound assets MUST be placed in
+  the shared reusable library:
+  - SFX → `public/assets/audio/sfx/`
+  - Music → `public/assets/audio/music/`
+- **Standardized naming.** `<base>_<variant>.<ext>` in lowercase snake_case, e.g.
+  `whoosh_fast.mp3`, `click_tactile.mp3`, `glitch_impact.mp3`, `ticker_counter.mp3`,
+  `chime_success.mp3`. Validate with `isStandardAudioName()` (see §0.1 registry).
+- **Registry.** Every asset is registered by a stable id in
+  `src/utils/audioLibrary.ts` (`SFX_LIBRARY` / `MUSIC_LIBRARY`); scenes reference it
+  through `sfxSrc(id)` / `musicSrc(id)` and the `<PlaySfx>` / `<PlaySfxTrack>` /
+  `<PlayMusic>` helpers — never a hardcoded path.
+- **Licensing.** Only royalty-free / CC0 / self-generated audio. Record the source
+  and license alongside the asset so provenance is auditable.
+- **Silent videos are forbidden.** Every exported video MUST feature synchronized SFX
+  and an ambient audio layer (§0, §6).
+
 ## 1. Loading audio
 
 - Use Remotion primitives only: `<Audio>`, `<Video>`'s audio, and `staticFile()`.
 - Local/generated/downloaded assets are referenced via `staticFile()`; bundle-local
-  SFX live in `sources/audio/sfx/` (shared library: `src/assets/audio/sfx/`,
-  music: `src/assets/audio/music/`).
+  SFX live in `sources/audio/sfx/`, while the **shared reusable library** lives in
+  `public/assets/audio/sfx/` (SFX) and `public/assets/audio/music/` (music) and is
+  accessed through the registry in `src/utils/audioLibrary.ts`.
 - Analyze waveform/beat info with `@remotion/media-utils` (`getAudioData`,
   `getAudioDurationInSeconds`, `useAudioData`) — deterministic during rendering.
 
@@ -25,11 +72,15 @@ Web Audio API's real-time scheduling.
 ## 3. SFX catalog (extend, don't duplicate)
 
 Core: `whoosh` (transitions), `pop` (UI), `click`, `ding`, `riser`, `impact`, `sparkle`.
+Pipeline-required minimum set (§0): `click`/`pop` (UI), `whoosh`/`sweep` (transitions),
+`glitch`/`impact` (alerts), and a rising `ding`/`tick` (tickers, gauges, checkmarks).
 Cinematic additions used by the producer: `glitch_rumble` (sub-bass impact),
 `hush_reverse` (pre-drop mute), `shimmer_merge` (fluid merge payoff),
 `click_chime` (resolution chime), `tick` (typing/typo cascade), `sub_drop`.
 
-Keep a typed manifest in `src/assets/audio/sfx/index.ts` (name → file + default gain).
+Keep a typed manifest in `src/utils/audioLibrary.ts` (`SFX_LIBRARY` / `MUSIC_LIBRARY`:
+id → standardized file + default gain), plus the `<PlaySfx>` helper for frame-locked
+placement with pitch modulation.
 
 ## 4. Audio ducking (music under narration/SFX)
 
@@ -57,7 +108,8 @@ Keep a typed manifest in `src/assets/audio/sfx/index.ts` (name → file + defaul
 ## 6. Cinematic Audio Architecture (MANDATORY layering)
 
 Sound design is a **layer stack** aligned to the visual beat sheet. Every scene MUST
-schedule (as the bundle's assets allow):
+schedule the following layers — using the bundle's own SFX assets, or the shared SFX
+library fallback (§0) when the bundle supplies none:
 
 1. **Sub-bass impact sweep on scene cuts** — a low `impact`/`glitch_rumble`/`sub_drop`
    on every hard cut, morph, and explosion; place exactly on the cut frame.
@@ -81,6 +133,11 @@ Layering rules:
 - [ ] All triggers via `<Sequence from={int}>` at 30 fps.
 - [ ] Volume envelopes `interpolate`-based and clamped.
 - [ ] Every `sfx` reference resolves; missing files fail the build.
+- [ ] Mandatory SFX pipeline satisfied (§0): UI clicks, transition whooshes, alert
+      impacts, and ticker/success chimes are present; the render is never silent.
+- [ ] Shared library honored (§0.1): downloaded/generated audio lives in
+      `public/assets/audio/sfx|music/` with standardized `base_variant` names, is
+      registered in `src/utils/audioLibrary.ts`, and is royalty-free/license-clear.
 - [ ] Cinematic layers present: sub-bass on cuts, tick/pop cascades on text,
       riser into reveals, chime on resolution (§6).
 - [ ] Music does not exceed clip length; fade-in ~10 frames, fade-out ~15 frames.

@@ -21,6 +21,7 @@ render time.
 | **ALLOWED (write)** | `src/components/ui/**` (2D motion graphics) |
 | **ALLOWED (write)** | `src/components/3d/**` (Three.js / R3F primitives) |
 | **ALLOWED (write)** | `src/scenes/**` (scene composition / layout) |
+| **ALLOWED (write)** | `public/assets/audio/**`, `src/assets/audio/**` (downloaded/generated SFX & music) |
 | **ALLOWED (write)** | `rules/01_motion_design.md` (motion rules only) |
 | **ALLOWED (read)** | `src/utils/projectLoader.ts` (for prop types), `rules/**`, `input/**` |
 | **FORBIDDEN (write)** | `src/utils/**` (loader, registry, prng, kinetics helpers) |
@@ -45,6 +46,40 @@ Producer for `input/`).
 - Swapping the bundle MUST change the video with **zero code edits** (rule 01 §10).
 - 3D confined to `src/components/3d/`; 2D UI in `src/components/ui/`; audio helpers in
   `src/components/audio/`; scenes in `src/scenes/`.
+
+---
+
+## 3.1 — MANDATORY AUDIO SFX PIPELINE (non-negotiable)
+
+Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while silent.
+
+- EVERY generated video bundle MUST include dynamic Sound Effects (SFX) synchronized to
+  visual motion beats.
+- REQUIRED SFX EVENTS:
+  1. **UI Interactions** — snappy click/tap sounds on button presses and form inputs
+     (`click.mp3` / `pop.mp3`).
+  2. **Scene Transitions & Motion** — smooth digital whooshes/sweeps during slide,
+     scale, or swipe scene changes (`whoosh.mp3` / `sweep.mp3`).
+  3. **Impact & Alerts** — glitch error sounds or heavy bass-drops on warning/error
+     reveals (`glitch.mp3` / `impact.mp3`).
+  4. **Success & Tickers** — rising-pitch chimes or ticking sounds on progress bars,
+     score counters (PageSpeed gauge tick), and checkmark reveals.
+- Use `@remotion/media-utils` or Remotion `<Audio />` tags bound dynamically from
+  `content.json` or scene frame triggers. Silent videos are strictly forbidden.
+- Scenes wire these cues (through `src/components/audio/` helpers) at the exact frame
+  their visual beat fires; when a bundle ships no SFX, fall back to the shared library
+  in `public/assets/audio/sfx/`.
+- **Asset acquisition is permitted.** You MAY download, fetch, or generate
+  royalty-free, license-clear clean UI SFX/music (`.mp3` / `.wav`).
+- **Mandatory reusable library + naming.** ALL downloaded or generated sound assets
+  MUST go in `public/assets/audio/sfx/` or `public/assets/audio/music/` using
+  standardized `base_variant` names (`whoosh_fast.mp3`, `click_tactile.mp3`,
+  `glitch_impact.mp3`, `ticker_counter.mp3`, `chime_success.mp3`), and MUST be
+  registered in `src/utils/audioLibrary.ts` (`SFX_LIBRARY` / `MUSIC_LIBRARY`).
+  Play them through `sfxSrc(id)` / `musicSrc(id)` and the `<PlaySfx>` /
+  `<PlaySfxTrack>` / `<PlayMusic>` helpers — never a hardcoded path.
+- **Ambient layer required.** Every export ships synchronized SFX plus an ambient
+  music bed (§0) — silent videos are forbidden.
 
 ---
 
@@ -75,6 +110,11 @@ Producer for `input/`).
    `quality="auto"` → lower `dpr`, no composer in preview); wrap asset loads in `<Suspense>`
    + an error boundary (rules 01/04, `.kilorules` §3).
 10. Reuse existing primitives instead of duplicating them.
+11. **Author the SFX cue sheet.** Every scene schedules the mandatory SFX events
+    (§3.1 / `rules/03` §0) at the exact frame of its visual beats — clicks on presses
+    and inputs, whooshes/sweeps on transitions, impacts on error/warning reveals,
+    rising chimes/ticks on gauges, counters and checkmarks — sourced from the bundle or
+    the shared SFX library. Silent scenes are a defect.
 
 ---
 
@@ -93,6 +133,11 @@ Producer for `input/`).
 - [ ] All new/changed components are prop-driven and generic.
 - [ ] No static center anchor; focal point moves across quadrants; background evolves (§4).
 - [ ] Camera uses damped-spring physics; no raw jitter; no per-frame filter storms.
+- [ ] Mandatory SFX pipeline authored (§3.1): UI clicks, transition whooshes, alert
+      impacts, and gauge/ticker/success chimes are wired to the beat frames; the video
+      is never silent.
+- [ ] Any downloaded/generated audio lives in `public/assets/audio/sfx|music/` with a
+      standardized `base_variant` name and is registered in `src/utils/audioLibrary.ts`.
 - [ ] Repeated meshes instanced; heavy math memoized; preview tier respected.
 - [ ] `npx tsc --noEmit` (and `npm run lint`) is clean.
 - [ ] Visual sanity check via `npx remotion still MainVideo output/preview.png --frame=60`

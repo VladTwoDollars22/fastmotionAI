@@ -1,0 +1,248 @@
+import type { FC } from "react";
+import { createElement } from "react";
+import {
+  Audio,
+  Sequence,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+
+/**
+ * Reusable, prop-driven Sound Library registry.
+ *
+ * Every downloaded/generated SFX or music asset lives in the shared public
+ * library and is referenced here by a stable id, so scenes never hardcode file
+ * paths. Assets are served through `staticFile()` from `public/`:
+ *   - SFX:   `public/assets/audio/sfx/<base>_<variant>.(mp3|wav)`
+ *   - Music: `public/assets/audio/music/<base>_<variant>.(mp3|wav)`
+ *
+ * Naming convention (enforced by `isStandardAudioName`): lowercase snake_case
+ * `base_variant` stem + `.mp3`/`.wav` extension (e.g. `whoosh_fast.mp3`,
+ * `click_tactile.mp3`, `glitch_impact.mp3`, `ticker_counter.mp3`,
+ * `chime_success.mp3`).
+ *
+ * Rule anchors: `rules/03_audio_and_sfx.md` §0 (mandatory SFX pipeline) and
+ * `rules/roles/02_motion_designer.md` §3.1 (silent videos are forbidden).
+ *
+ * Note: written as `.ts` (no JSX) per the pipeline spec; helper components are
+ * built with `createElement` so the module stays a plain TypeScript utility.
+ */
+
+export const SFX_DIR = "assets/audio/sfx";
+export const MUSIC_DIR = "assets/audio/music";
+
+/** Standardized asset-name shape: `base_variant.mp3` / `base_variant.wav`. */
+export const STANDARD_AUDIO_NAME = /^[a-z0-9]+(_[a-z0-9]+)*\.(mp3|wav)$/;
+
+export const isStandardAudioName = (fileName: string): boolean =>
+  STANDARD_AUDIO_NAME.test(fileName);
+
+/** The four mandatory event families required by the SFX pipeline. */
+export type SfxKind = "interaction" | "transition" | "impact" | "success";
+
+export type SfxId =
+  | "click"
+  | "pop"
+  | "whoosh"
+  | "sweep"
+  | "glitch"
+  | "impact"
+  | "ticker"
+  | "chime"
+  | "riser"
+  | "ding"
+  | "sparkle";
+
+export interface SfxAsset {
+  id: SfxId;
+  /** Standardized file name inside `public/assets/audio/sfx/`. */
+  file: string;
+  /** Default mix gain (0..1) applied before any per-cue volume. */
+  gain: number;
+  kind: SfxKind;
+}
+
+export const SFX_LIBRARY: Record<SfxId, SfxAsset> = {
+  // 1) UI Interactions — clicks / taps on buttons and form inputs.
+  click: { id: "click", file: "click_tactile.mp3", gain: 0.7, kind: "interaction" },
+  pop: { id: "pop", file: "pop_snappy.mp3", gain: 0.7, kind: "interaction" },
+  // 2) Scene Transitions & Motion — whooshes / sweeps on slide, scale, swipe.
+  whoosh: { id: "whoosh", file: "whoosh_fast.mp3", gain: 0.8, kind: "transition" },
+  sweep: { id: "sweep", file: "sweep_digital.mp3", gain: 0.75, kind: "transition" },
+  riser: { id: "riser", file: "riser_tension.mp3", gain: 0.7, kind: "transition" },
+  // 3) Impact & Alerts — glitch errors / bass drops on warning reveals.
+  glitch: { id: "glitch", file: "glitch_impact.mp3", gain: 0.85, kind: "impact" },
+  impact: { id: "impact", file: "impact_bass.mp3", gain: 0.9, kind: "impact" },
+  // 4) Success & Tickers — chimes / ticks on gauges, counters, checkmarks.
+  ticker: { id: "ticker", file: "ticker_counter.mp3", gain: 0.6, kind: "success" },
+  chime: { id: "chime", file: "chime_success.mp3", gain: 0.8, kind: "success" },
+  ding: { id: "ding", file: "ding_resolve.mp3", gain: 0.75, kind: "success" },
+  sparkle: { id: "sparkle", file: "sparkle_shimmer.mp3", gain: 0.65, kind: "success" },
+};
+
+/** Maps the mandatory event families to the library ids that satisfy them. */
+export const REQUIRED_SFX_EVENTS: Record<SfxKind, SfxId[]> = {
+  interaction: ["click", "pop"],
+  transition: ["whoosh", "sweep"],
+  impact: ["glitch", "impact"],
+  success: ["ticker", "chime", "ding"],
+};
+
+export type MusicId = "ambient_light" | "ambient_tech" | "uplift";
+
+export interface MusicAsset {
+  id: MusicId;
+  file: string;
+  /** Default mix volume (0..1) for the ambient bed. */
+  gain: number;
+}
+
+export const MUSIC_LIBRARY: Record<MusicId, MusicAsset> = {
+  ambient_light: { id: "ambient_light", file: "ambient_light.mp3", gain: 0.3 },
+  ambient_tech: { id: "ambient_tech", file: "ambient_tech.mp3", gain: 0.3 },
+  uplift: { id: "uplift", file: "uplift_pulse.mp3", gain: 0.34 },
+};
+
+/** Absolute static URL for a SFX asset id (served from `public/`). */
+export const sfxSrc = (id: SfxId): string =>
+  staticFile(`${SFX_DIR}/${SFX_LIBRARY[id].file}`);
+
+/** Absolute static URL for a music asset id (served from `public/`). */
+export const musicSrc = (id: MusicId): string =>
+  staticFile(`${MUSIC_DIR}/${MUSIC_LIBRARY[id].file}`);
+
+/** Semitone→playbackRate helper for pitch modulation (12 semitones = octave). */
+export const pitchToRate = (semitones: number): number => Math.pow(2, semitones / 12);
+
+export interface PlaySfxProps {
+  /** Registry id (see `SFX_LIBRARY`). */
+  id: SfxId;
+  /** Frame within the parent Sequence at which the SFX fires. */
+  frame: number;
+  /** Extra trigger frames when the same cue repeats. */
+  extraFrames?: number[];
+  /** Per-cue volume multiplier (0..1), applied on top of the asset gain. */
+  volume?: number;
+  /** Pitch modulation in semitones (positive = higher). */
+  pitch?: number;
+  /** Direct `playbackRate` override; wins over `pitch`. */
+  rate?: number;
+  /** Keep the original pitch when changing `rate` (time-stretch). */
+  preservePitch?: boolean;
+  /** Cut the tail after this many frames (defaults to the asset length). */
+  durationInFrames?: number;
+  loop?: boolean;
+  /** Explicit source override (e.g. a bundle-local asset). */
+  src?: string;
+}
+
+export interface SfxCue {
+  id: SfxId;
+  frame: number;
+  volume?: number;
+  pitch?: number;
+  rate?: number;
+}
+
+/**
+ * Frame-locked SFX player. Positions `<Audio>` on a `<Sequence from={frame}>`
+ * so Remotion converts frames→seconds deterministically at the composition fps.
+ * Supports pitch modulation via semitones (`pitch`) or a raw `rate`.
+ */
+export const PlaySfx: FC<PlaySfxProps> = ({
+  id,
+  frame,
+  extraFrames,
+  volume = 1,
+  pitch = 0,
+  rate,
+  preservePitch,
+  durationInFrames,
+  loop,
+  src,
+}) => {
+  const asset = SFX_LIBRARY[id];
+  const playbackRate = rate ?? (pitch !== 0 ? pitchToRate(pitch) : 1);
+  const resolvedVolume = Math.min(1, Math.max(0, volume)) * asset.gain;
+  const frames = [frame, ...(extraFrames ?? [])];
+
+  return frames.map((trigger, index) =>
+    createElement(
+      Sequence,
+      {
+        key: index,
+        from: Math.max(0, Math.round(trigger)),
+        durationInFrames,
+        layout: "none" as const,
+        name: `sfx:${id}`,
+      },
+      createElement(Audio, {
+        src: src ?? sfxSrc(id),
+        volume: resolvedVolume,
+        playbackRate,
+        preservePitch,
+        loop,
+      }),
+    ),
+  );
+};
+
+/** Renders a whole beat-locked cue sheet from a list of `SfxCue`s. */
+export const PlaySfxTrack: FC<{ cues: SfxCue[] }> = ({ cues }) =>
+  cues.map((cue, index) =>
+    createElement(PlaySfx, {
+      key: index,
+      id: cue.id,
+      frame: cue.frame,
+      volume: cue.volume,
+      pitch: cue.pitch,
+      rate: cue.rate,
+    }),
+  );
+
+export interface PlayMusicProps {
+  id: MusicId;
+  /** Base volume multiplier (0..1), applied on top of the asset gain. */
+  volume?: number;
+  /** Frames to fade in from silence (default 10). */
+  fadeInFrames?: number;
+  /** Frames to fade out before the composition ends (default 15). */
+  fadeOutFrames?: number;
+  loop?: boolean;
+  /** Explicit source override. */
+  src?: string;
+}
+
+/**
+ * Full-length ambient music bed with frame-driven fade in/out so the track
+ * never clips the composition. Intended to sit at the composition root.
+ */
+export const PlayMusic: FC<PlayMusicProps> = ({
+  id,
+  volume = 1,
+  fadeInFrames = 10,
+  fadeOutFrames = 15,
+  loop,
+  src,
+}) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const base = Math.min(1, Math.max(0, volume)) * MUSIC_LIBRARY[id].gain;
+
+  const fadeInEnd = Math.max(1, Math.round(fadeInFrames));
+  const fadeOutStart = Math.max(0, durationInFrames - Math.max(1, Math.round(fadeOutFrames)));
+  const level = Math.min(
+    interpolate(frame, [0, fadeInEnd], [0, base], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
+    interpolate(frame, [fadeOutStart, durationInFrames], [base, 0], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
+  );
+
+  return createElement(Audio, { src: src ?? musicSrc(id), volume: level, loop });
+};
