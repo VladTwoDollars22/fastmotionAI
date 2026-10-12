@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { memo, useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 import { mulberry32 } from "../../utils/prng";
 
@@ -20,7 +21,27 @@ export interface ParticleBurstProps {
   ring?: boolean;
 }
 
-export const ParticleBurst: FC<ParticleBurstProps> = ({
+interface Sample {
+  angle: number;
+  reach: number;
+  tint: number;
+  shape: number;
+}
+
+const buildSamples = (count: number, seed: number): Sample[] => {
+  const random = mulberry32(seed);
+  const samples: Sample[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = random() * Math.PI * 2;
+    const reach = 0.35 + random() * 0.65;
+    const tint = random();
+    const shape = random();
+    samples.push({ angle, reach, tint, shape });
+  }
+  return samples;
+};
+
+const ParticleBurstImpl: FC<ParticleBurstProps> = ({
   x,
   y,
   count = 44,
@@ -38,24 +59,26 @@ export const ParticleBurst: FC<ParticleBurstProps> = ({
   ring = false,
 }) => {
   const frame = useCurrentFrame();
+  const samples = useMemo(() => buildSamples(count, seed), [count, seed]);
+
   const local = frame - delay;
   if (local < 0 || local > durationInFrames) return null;
 
   const progress = local / durationInFrames;
-  const random = mulberry32(seed);
   const items: React.ReactNode[] = [];
 
   for (let i = 0; i < count; i++) {
-    const angle = random() * Math.PI * 2;
-    const reach = (0.35 + random() * 0.65) * spread * speed * Math.pow(progress, 0.55);
+    const sample = samples[i];
+    const angle = sample.angle;
+    const reach = sample.reach * spread * speed * Math.pow(progress, 0.55);
     const dx = Math.cos(angle) * reach;
     const dy =
       Math.sin(angle) * reach + gravity * progress * progress * durationInFrames * 0.6;
     const opacity = Math.max(0, 1 - Math.pow(progress, 1.4));
-    const tint = random() > 0.6 ? color2 : color;
+    const tint = sample.tint > 0.6 ? color2 : color;
 
     if (mode === "lines") {
-      const length = lineLength * (0.4 + random() * 0.8) * (1 - progress * 0.55);
+      const length = lineLength * (0.4 + sample.shape * 0.8) * (1 - progress * 0.55);
       const tailX = x + dx * 0.45 - Math.cos(angle) * length;
       const tailY = y + dy * 0.45 - Math.sin(angle) * length;
       items.push(
@@ -77,7 +100,7 @@ export const ParticleBurst: FC<ParticleBurstProps> = ({
           key={i}
           cx={x + dx}
           cy={y + dy}
-          r={size * (0.4 + random()) * (1 - progress * 0.5)}
+          r={size * (0.4 + sample.shape) * (1 - progress * 0.5)}
           fill={tint}
           opacity={opacity}
         />,
@@ -102,3 +125,5 @@ export const ParticleBurst: FC<ParticleBurstProps> = ({
     </g>
   );
 };
+
+export const ParticleBurst = memo(ParticleBurstImpl);

@@ -1,5 +1,6 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
+import { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { GlowOverlay } from "../../components/ui/GlowOverlay";
 import { KineticText } from "../../components/ui/KineticText";
@@ -54,7 +55,7 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
   const roll = spin(frame, "order-roll", -1.1 * energy, 0.3);
   const punch = zoomPunch(frame, [{ start: 104, decay: 16, amount: 0.12 }]);
 
-  const angles = spikeAngles(SPIKE_COUNT, "spike-a");
+  const angles = useMemo(() => spikeAngles(SPIKE_COUNT, "spike-a"), []);
   const spikeOpacity = (1 - shatterP) * 0.9;
   const colorP = smoothstep(30, 56, frame);
   const unified = palette.accent;
@@ -105,7 +106,6 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
                 d={`M ${p1.x} ${p1.y} L ${p3.x} ${p3.y} L ${p2.x} ${p2.y} Z`}
                 fill={index % 2 === 0 ? palette.chaos[0] : palette.chaos[1]}
                 opacity={spikeOpacity * (0.5 + 0.5 * Math.abs(noise2D("of", index, time * 5)))}
-                style={{ filter: `drop-shadow(0 0 14px ${palette.chaos[0]})` }}
               />
             );
           })}

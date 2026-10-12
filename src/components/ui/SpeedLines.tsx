@@ -1,5 +1,6 @@
 import { noise2D } from "@remotion/noise";
 import type { FC } from "react";
+import { memo, useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 
 export interface SpeedLinesProps {
@@ -15,7 +16,13 @@ export interface SpeedLinesProps {
   width?: number;
 }
 
-export const SpeedLines: FC<SpeedLinesProps> = ({
+interface LineFactor {
+  angle: number;
+  spread: number;
+  alpha: number;
+}
+
+const SpeedLinesImpl: FC<SpeedLinesProps> = ({
   count = 30,
   color = "#FFD466",
   delay = 0,
@@ -28,6 +35,20 @@ export const SpeedLines: FC<SpeedLinesProps> = ({
   width = 3,
 }) => {
   const frame = useCurrentFrame();
+
+  // Per-line randomness depends only on index/seed, never on frame: compute once.
+  const factors = useMemo(() => {
+    const list: LineFactor[] = [];
+    for (let i = 0; i < count; i++) {
+      list.push({
+        angle: (i / count) * Math.PI * 2 + noise2D(seed, i * 1.7, 0) * 0.12,
+        spread: 0.5 + 0.5 * Math.abs(noise2D(seed, i * 2.1, 1)),
+        alpha: 0.45 + 0.55 * Math.abs(noise2D(seed, i, 2)),
+      });
+    }
+    return list;
+  }, [count, seed]);
+
   const local = frame - delay;
   if (local < 0 || local > durationInFrames) return null;
 
@@ -36,22 +57,17 @@ export const SpeedLines: FC<SpeedLinesProps> = ({
   const items: React.ReactNode[] = [];
 
   for (let i = 0; i < count; i++) {
-    const angle =
-      (i / count) * Math.PI * 2 + noise2D(seed, i * 1.7, 0) * 0.12;
+    const factor = factors[i];
     const r0 = inner + grow * 44;
-    const r1 =
-      inner +
-      reach * grow * (0.5 + 0.5 * Math.abs(noise2D(seed, i * 2.1, 1)));
-    const opacity =
-      Math.max(0, 1 - progress) *
-      (0.45 + 0.55 * Math.abs(noise2D(seed, i, 2)));
+    const r1 = inner + reach * grow * factor.spread;
+    const opacity = Math.max(0, 1 - progress) * factor.alpha;
     items.push(
       <line
         key={i}
-        x1={cx + Math.cos(angle) * r0}
-        y1={cy + Math.sin(angle) * r0}
-        x2={cx + Math.cos(angle) * r1}
-        y2={cy + Math.sin(angle) * r1}
+        x1={cx + Math.cos(factor.angle) * r0}
+        y1={cy + Math.sin(factor.angle) * r0}
+        x2={cx + Math.cos(factor.angle) * r1}
+        y2={cy + Math.sin(factor.angle) * r1}
         stroke={color}
         strokeWidth={width * (1 - progress * 0.5)}
         strokeLinecap="round"
@@ -62,3 +78,5 @@ export const SpeedLines: FC<SpeedLinesProps> = ({
 
   return <g style={{ mixBlendMode: "screen" }}>{items}</g>;
 };
+
+export const SpeedLines = memo(SpeedLinesImpl);

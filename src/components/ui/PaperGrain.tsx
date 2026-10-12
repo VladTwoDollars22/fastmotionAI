@@ -27,8 +27,10 @@ export const PaperGrain: FC<PaperGrainProps> = ({
   animate = true,
 }) => {
   const frame = useCurrentFrame();
-  const ox = animate ? ((frame * speed * 6) % scale) : 0;
-  const oy = animate ? ((frame * speed * 4.1) % scale) : 0;
+  // Sample every other frame: halves full-frame repaints with no perceptible difference.
+  const step = animate ? Math.floor(frame / 2) : 0;
+  const ox = animate ? (step * speed * 6) % scale : 0;
+  const oy = animate ? (step * speed * 4.1) % scale : 0;
 
   return (
     <AbsoluteFill

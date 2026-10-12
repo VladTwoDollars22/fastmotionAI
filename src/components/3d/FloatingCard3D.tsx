@@ -1,6 +1,9 @@
 import { RoundedBox } from "@react-three/drei";
 import type { FC } from "react";
+import { useMemo } from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+
+export type CardQuality = "auto" | "preview" | "high";
 
 export interface FloatingCard3DProps {
   position?: [number, number, number];
@@ -37,30 +40,34 @@ export const FloatingCard3D: FC<FloatingCard3DProps> = ({
   const rotationY = Math.sin(time * 0.7 * floatSpeed) * 0.22;
   const rotationX = Math.cos(time * 0.5 * floatSpeed) * 0.08;
 
+  const [sx, sy, sz] = size;
+  const boxArgs = useMemo<[number, number, number]>(
+    () => [sx, sy, sz],
+    [sx, sy, sz],
+  );
+  const wireArgs = useMemo<[number, number, number]>(
+    () => [sx * 1.03, sy * 1.03, sz * 0.5],
+    [sx, sy, sz],
+  );
+
   return (
     <group
       position={[position[0], position[1] + (1 - enter) * -1.2 + floatY, position[2]]}
       rotation={[rotationX, rotationY, 0]}
       scale={0.85 + 0.15 * enter}
     >
-      <RoundedBox args={size} radius={radius} smoothness={6}>
-        <meshPhysicalMaterial
+      <RoundedBox args={boxArgs} radius={radius} smoothness={6}>
+        <meshStandardMaterial
           color={color}
           transparent
-          opacity={0.34}
-          roughness={0.08}
-          metalness={0}
-          clearcoat={1}
-          clearcoatRoughness={0.08}
+          opacity={0.42}
+          roughness={0.14}
+          metalness={0.05}
           emissive={accent}
-          emissiveIntensity={0.12}
+          emissiveIntensity={0.16}
         />
       </RoundedBox>
-      <RoundedBox
-        args={[size[0] * 1.03, size[1] * 1.03, size[2] * 0.5]}
-        radius={radius * 1.05}
-        smoothness={4}
-      >
+      <RoundedBox args={wireArgs} radius={radius * 1.05} smoothness={4}>
         <meshBasicMaterial
           color={accent}
           wireframe

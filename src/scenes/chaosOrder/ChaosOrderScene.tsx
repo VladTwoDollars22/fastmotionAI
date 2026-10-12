@@ -36,10 +36,10 @@ const PUNCHES: PunchTrigger[] = [
 ];
 
 const SHAKES: ShakeTrigger[] = [
-  { start: 100, decay: 36, amp: 28 },
-  { start: 150, decay: 18, amp: 15 },
-  { start: 165, decay: 24, amp: 11 },
-  { start: 252, decay: 28, amp: 9 },
+  { start: 100, decay: 36, amp: 16 },
+  { start: 150, decay: 18, amp: 9 },
+  { start: 165, decay: 24, amp: 7 },
+  { start: 252, decay: 28, amp: 6 },
 ];
 
 const BOKEH = [
@@ -166,9 +166,9 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
                   marginLeft: -blob.r,
                   marginTop: -blob.r,
                   borderRadius: "50%",
-                  background: `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 68%)`,
-                  filter: "blur(56px)",
-                  opacity: 0.18,
+                  // Gradient falloff replaces a full-layer blur() (huge preview win).
+                  background: `radial-gradient(circle, ${color} 0%, ${color}55 34%, rgba(0,0,0,0) 72%)`,
+                  opacity: 0.22,
                   mixBlendMode: "screen",
                   transform: `translate(${drift.x}px, ${drift.y}px)`,
                 }}

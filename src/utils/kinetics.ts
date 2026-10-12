@@ -34,6 +34,20 @@ export interface Float {
   y: number;
 }
 
+/**
+ * Critically-damped impulse envelope (the analytic equivalent of a
+ * `spring({ damping: 30, stiffness: 90 })` settle). Returns 1 at `elapsed = 0`
+ * and eases smoothly to 0 by `decay`, with no overshoot and no frame-to-frame
+ * jitter — use this instead of quadratic/linear falloff for camera impacts.
+ */
+export const dampedImpulse = (elapsed: number, decay: number): number => {
+  if (elapsed < 0 || decay <= 0) return 0;
+  const t = elapsed / decay;
+  if (t >= 1) return 0;
+  const x = t * 6.5;
+  return (1 + x) * Math.exp(-x);
+};
+
 export const shakeOffset = (
   frame: number,
   triggers: ShakeTrigger[],
@@ -42,15 +56,15 @@ export const shakeOffset = (
   for (const trigger of triggers) {
     const d = frame - trigger.start;
     if (d >= 0 && d < trigger.decay) {
-      const falloff = 1 - d / trigger.decay;
-      amp = Math.max(amp, trigger.amp * falloff * falloff);
+      amp = Math.max(amp, trigger.amp * dampedImpulse(d, trigger.decay));
     }
   }
   if (amp <= 0) return { x: 0, y: 0, rot: 0 };
+  // Low-frequency noise keeps the shake smooth and fluid instead of jittery.
   return {
-    x: amp * noise2D("shake-x", frame * 0.9, 0.31),
-    y: amp * noise2D("shake-y", frame * 0.8, 1.73),
-    rot: amp * 0.05 * noise2D("shake-r", frame * 0.6, 2.11),
+    x: amp * noise2D("shake-x", frame * 0.26, 0.31),
+    y: amp * noise2D("shake-y", frame * 0.22, 1.73),
+    rot: amp * 0.04 * noise2D("shake-r", frame * 0.18, 2.11),
   };
 };
 

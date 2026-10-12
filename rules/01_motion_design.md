@@ -86,8 +86,13 @@ Every scene beat MUST have active camera work, all frame-driven:
   scene container, plus 3D `rotation.z` on the R3F camera.
 - **Continuous parallax**: translate layers by depth — background ~±6px, midground
   ~±14px, foreground ~±26px, driven by the same noise/sine source so layers feel connected.
-- **Impact screen shake**: on heavy beats, decaying noise jitter
-  (`amp * noise2D(seed, frame * k, c)` with quadratic falloff) on the container.
+- **Impact screen shake (damped spring only)**: on heavy beats, use a
+  critically-damped spring impulse envelope — `spring({ frame, fps, damping: 30, stiffness: 90 })`
+  or the equivalent analytic falloff (`dampedImpulse` in `src/utils/kinetics.ts`) — driving a
+  **low-frequency** noise offset (`noise2D(seed, frame * 0.2, c)`). FORBIDDEN: raw high-frequency
+  noise jitter (`frame * 0.9+`), quadratic/linear falloff, or unclamped amplitudes — these read as
+  8–20 FPS "frame-jitter" and are a defect. Shake amplitude is a tasteful accent (≤ ~18px), never
+  a sustained vibration.
 - **3D dolly through Z**: on morph transitions, ease the R3F camera toward/through the
   particle field (see §8).
 
@@ -151,3 +156,72 @@ Transitions MUST NOT be simple fades or slides. Use at least one of:
 - [ ] Palette/energy/copy come from the bundle, not hardcoded (§10).
 - [ ] `interpolate` clamped; springs use explicit `fps` + `config`.
 - [ ] Total duration ≤ composition duration.
+- [ ] No static center anchor / center-object swap; focal point moves across quadrants (§12).
+- [ ] Background evolves on every transition (gradient / grid / lighting / theme) (§13).
+- [ ] Camera shake is damped-spring + low-frequency, never raw jitter (§7, §14).
+- [ ] Every beat flows into the next via a morph/trace/dissolution (§14).
+- [ ] Preview stays smooth: no per-frame SVG/CSS filter storms; heavy math memoized (§15).
+
+---
+
+## 12. Break the "center object swap" stereotype (mandatory)
+
+The single most common failure of AI-generated motion is a **static object parked in the
+center that is merely replaced, beat by beat**. Ban it.
+
+- **No static anchors.** A hero element may not sit at a fixed center coordinate across
+  multiple beats while only its contents change. That is a defect, not a composition.
+- **Dynamic spatial choreography.** Core elements MUST travel across **all four quadrants**
+  of the 9:16 frame over the course of the piece:
+  - continuous **diagonal passes** (enter top-left → exit bottom-right, then re-enter from a
+    new edge),
+  - **Z-space fly-throughs** (element scales from off-frame foreground to deep background),
+  - **dynamic off-center focal points** (rule-of-thirds / golden-ratio anchors that change
+    every beat).
+- **Eye travel.** Consecutive beats MUST NOT share the same focal coordinate; the focal
+  point moves so the viewer's eye is led around the frame.
+- **Anchor legibility.** Keep critical content inside the safe area (rule 01 §1) even while
+  it travels; never let a moving hero clip the platform UI zones.
+
+## 13. Active environment & background evolution (mandatory)
+
+A background may **never** remain a static solid color. Every scene and every transition
+must show the environment changing:
+
+- **Dynamic color gradients** — animate a multi-stop gradient's hue/position across the
+  beat (interpolate color stops from the bundle palette, frame-driven).
+- **Shifting 3D grid depths** — move/scale/perspective-shift a grid or floor plane so
+  depth reads as alive.
+- **Moving lighting angles** — sweep key/rim light direction and color temperature across
+  the beat; the light itself is a character.
+- **Thematic environment morphing** — the "world" (field density, palette, atmosphere)
+  visibly transforms at transitions instead of cutting.
+
+The background is a **Z-layer with its own choreography** (rule 01 §7), not wallpaper.
+
+## 14. Smoothness & mesmerizing visual flow (mandatory)
+
+- **Continuous fluid motion curves.** Every animated value uses easing (spring or
+  ease-in-out) — no linear snaps, no hard stops, no step changes.
+- **Damped-spring camera physics.** All camera moves (pan, roll, dolly, shake) use damped
+  springs (`damping: 30, stiffness: 90`) or critically-damped envelopes with smooth
+  ease-in-out interpolation vectors. Never drive the camera with raw per-frame random noise.
+- **Seamless handoffs.** Every beat flows into the next via **organic morphing**, **line
+  tracing**, or **3D particle dissolution** — the outgoing element's points/form become the
+  incoming element's. A hard cut or plain crossfade is a defect (rule 01 §8).
+- **No jitter.** If motion vibrates frame-to-frame, it is a bug: lower the frequency, add
+  damping, and clamp amplitude.
+
+## 15. Performance-aware motion (preview must stay smooth)
+
+Mesmerizing motion that drops the Studio preview to 8–20 FPS is a defect. Motion is
+designed to the frame budget (rule 04 §6):
+
+- **Memoize** expensive math and `noise2D` sample sets with `useMemo`/`useCallback` keyed by
+  inputs that do **not** include the frame; per-frame work should be cheap interpolation.
+- **Never** run chained SVG goo filters, large `feGaussianBlur`, or full-layer CSS `blur()`
+  every frame. Prefer gradient falloff, overlap compositing, Canvas 2D, or WebGL (rule 04 §5).
+- Avoid per-frame allocation (arrays, vectors, geometry) and per-element `drop-shadow`
+  storms over many paths.
+- Per-beat element counts (particles, lines, satellites) are capped to the budget and
+  scaled down automatically during preview.

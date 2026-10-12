@@ -46,7 +46,11 @@ Designer**. If it requires a new/edited bundle, hand off to **Producer**.
    correct: `MainVideo`, 1080x1920, 30 FPS, 300 frames.
 5. Maintain the pipeline contract and configuration (`package.json` scripts,
    `.kilorules`, `rules/roles/**`).
-6. Enforce the verification gate: `npm run lint` (`eslint src && tsc`) must be clean.
+6. **Own preview performance.** Profile the Studio preview and keep it smooth: enforce the
+   `getRemotionEnvironment()` quality tier (no `EffectComposer`/heavy `dpr` in preview,
+   full quality while rendering), ban per-frame SVG/CSS filter storms, and require
+   instancing/memoization for heavy scenes (rule 01 §15, rule 04 §1/§5/§6).
+7. Enforce the verification gate: `npm run lint` (`eslint src && tsc`) must be clean.
 
 ---
 
@@ -64,6 +68,7 @@ Designer**. If it requires a new/edited bundle, hand off to **Producer**.
 
 - [ ] `npm run bundles` regenerates the registry successfully.
 - [ ] `npm run lint` (`eslint src && tsc`) is clean; `npx tsc --noEmit` passes.
+- [ ] Preview performance tier verified (smooth preview, no per-frame filter storms).
 - [ ] Loader/watcher/CLI changes are documented and deterministic.
 - [ ] No design/component files were touched outside this role's boundary locks.
 - [ ] Report the exact lint/tsc result.

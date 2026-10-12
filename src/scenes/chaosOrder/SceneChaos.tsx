@@ -1,5 +1,6 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC, ReactNode } from "react";
+import { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { GlowOverlay } from "../../components/ui/GlowOverlay";
 import { KineticText } from "../../components/ui/KineticText";
@@ -95,12 +96,18 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
   const punch3 = zoomPunch(frame, [{ start: 74, decay: 14, amount: 0.2 }]);
   const punch4 = zoomPunch(frame, [{ start: 114, decay: 14, amount: 0.1 }]);
 
-  const verticals: number[] = [];
-  for (let x = 0; x <= 1080; x += GRID) verticals.push(x);
-  const horizontals: number[] = [];
-  for (let y = 0; y <= 1920; y += GRID) horizontals.push(y);
+  const verticals = useMemo(() => {
+    const list: number[] = [];
+    for (let x = 0; x <= 1080; x += GRID) list.push(x);
+    return list;
+  }, []);
+  const horizontals = useMemo(() => {
+    const list: number[] = [];
+    for (let y = 0; y <= 1920; y += GRID) list.push(y);
+    return list;
+  }, []);
 
-  const angles = spikeAngles(SPIKE_COUNT, "spike-a");
+  const angles = useMemo(() => spikeAngles(SPIKE_COUNT, "spike-a"), []);
 
   const cardJitterX = noise2D("card-x", time * 3.1, 0) * (2 + caStrength * 10);
   const cardJitterY = noise2D("card-y", time * 3.4, 1) * (2 + caStrength * 10);
@@ -187,7 +194,6 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
                     d={`M ${p1.x} ${p1.y} L ${p3.x} ${p3.y} L ${p2.x} ${p2.y} Z`}
                     fill={index % 2 === 0 ? palette.chaos[0] : palette.chaos[1]}
                     opacity={spikeFade * flicker * 0.85}
-                    style={{ filter: `drop-shadow(0 0 18px ${palette.chaos[0]})` }}
                   />
                 );
               })

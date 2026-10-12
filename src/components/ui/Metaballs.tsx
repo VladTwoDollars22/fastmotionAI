@@ -1,6 +1,6 @@
 import { noise2D } from "@remotion/noise";
 import type { FC } from "react";
-import { useCurrentFrame } from "remotion";
+import { getRemotionEnvironment, useCurrentFrame } from "remotion";
 
 export interface GooFilterDefsProps {
   id: string;
@@ -34,6 +34,8 @@ export interface Metaball {
   color?: string;
 }
 
+export type MetaballMode = "auto" | "goo" | "soft";
+
 export interface MetaballsProps {
   id: string;
   blobs: Metaball[];
@@ -42,6 +44,11 @@ export interface MetaballsProps {
   wobble?: number;
   seed?: string;
   speed?: number;
+  /**
+   * "auto" (default) uses the expensive goo filter only during a final render and a
+   * cheaper overlap-composited pass during Studio preview. "goo"/"soft" force either.
+   */
+  mode?: MetaballMode;
 }
 
 export const Metaballs: FC<MetaballsProps> = ({
@@ -52,24 +59,38 @@ export const Metaballs: FC<MetaballsProps> = ({
   wobble = 0.08,
   seed = "meta",
   speed = 1,
+  mode = "auto",
 }) => {
   const frame = useCurrentFrame();
+  const { isRendering } = getRemotionEnvironment();
   const time = frame / 30;
+  const useGoo = mode === "goo" || (mode === "auto" && isRendering);
 
+  const circles = blobs.map((blob, index) => {
+    const ripple = 1 + wobble * noise2D(`${seed}-${index}`, time * speed, index);
+    return (
+      <circle
+        key={index}
+        cx={blob.x + noise2D(`${seed}-x${index}`, time * speed, 0.4) * 6}
+        cy={blob.y + noise2D(`${seed}-y${index}`, time * speed, 1.1) * 6}
+        r={blob.r * ripple}
+        fill={blob.color ?? color}
+      />
+    );
+  });
+
+  if (useGoo) {
+    return (
+      <g filter={`url(#${id})`} fill={color} opacity={opacity}>
+        {circles}
+      </g>
+    );
+  }
+
+  // Preview-friendly path: overlapping opacity-composited circles, no SVG filter pass.
   return (
-    <g filter={`url(#${id})`} fill={color} opacity={opacity}>
-      {blobs.map((blob, index) => {
-        const ripple = 1 + wobble * noise2D(`${seed}-${index}`, time * speed, index);
-        return (
-          <circle
-            key={index}
-            cx={blob.x + noise2D(`${seed}-x${index}`, time * speed, 0.4) * 6}
-            cy={blob.y + noise2D(`${seed}-y${index}`, time * speed, 1.1) * 6}
-            r={blob.r * ripple}
-            fill={blob.color ?? color}
-          />
-        );
-      })}
+    <g opacity={opacity} style={{ mixBlendMode: "screen" }}>
+      {circles}
     </g>
   );
 };

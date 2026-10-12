@@ -55,9 +55,26 @@ Producer for `input/`).
 2. Clamp every `interpolate()`; springs always take explicit `fps` + `config` and a
    `Math.max(0, frame - delay)` guard (rule 01 §3–§4).
 3. Satisfy the "Zero Static Frame" law and 3 Z-layer composition (rule 01 §6–§7).
-4. Three.js: `frameloop="never"` with an explicit per-frame `gl.render()`; cap `dpr` to
-   `[1, 2]`; wrap asset loads in `<Suspense>` + an error boundary (rules 01/04, `.kilorules` §3).
-5. Reuse existing primitives instead of duplicating them.
+4. **Break the center-object-swap stereotype.** No static center anchor: core elements
+   travel across all four quadrants via diagonal passes, Z fly-throughs, and changing
+   off-center focal points; consecutive beats never share a focal coordinate (rule 01 §12).
+5. **Active environment & background evolution.** Backgrounds are never static solid color;
+   every transition evolves the gradient, grid depth, lighting angle, and/or theme
+   (rule 01 §13).
+6. **Smooth, anti-jitter camera physics.** All camera moves use damped springs
+   (`spring({ fps, damping: 30, stiffness: 90 })`) / `dampedImpulse` and low-frequency noise —
+   never raw per-frame jitter (rule 01 §7/§14, rule 04 §2).
+7. **Mesmerizing flow.** Every beat hands off via organic morph, line trace, or particle
+   dissolution — no hard cuts or plain crossfades (rule 01 §8/§14).
+8. **Performance-aware motion.** Memoize frame-independent math/`noise2D` sets
+   (`useMemo`/`useCallback` keyed without the frame); no per-frame SVG goo filters, large
+   `feGaussianBlur`, full-layer CSS `blur()`, or per-element `drop-shadow` storms
+   (rule 01 §15, rule 04 §5).
+9. Three.js: `frameloop="never"` with an explicit per-frame `gl.render()`; use instancing
+   for repeated meshes; obey the preview quality tier (`BackgroundField`/`ThreeCanvas`
+   `quality="auto"` → lower `dpr`, no composer in preview); wrap asset loads in `<Suspense>`
+   + an error boundary (rules 01/04, `.kilorules` §3).
+10. Reuse existing primitives instead of duplicating them.
 
 ---
 
@@ -74,6 +91,10 @@ Producer for `input/`).
 
 - [ ] No hardcoded project-specific text or brand colors in the changed files.
 - [ ] All new/changed components are prop-driven and generic.
+- [ ] No static center anchor; focal point moves across quadrants; background evolves (§4).
+- [ ] Camera uses damped-spring physics; no raw jitter; no per-frame filter storms.
+- [ ] Repeated meshes instanced; heavy math memoized; preview tier respected.
 - [ ] `npx tsc --noEmit` (and `npm run lint`) is clean.
 - [ ] Visual sanity check via `npx remotion still MainVideo output/preview.png --frame=60`
-      when a visual change was made.
+      when a visual change was made (only when a render is explicitly permitted —
+      the Lead Architect freeze forbids renders).

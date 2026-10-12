@@ -5,14 +5,21 @@ import {
   Noise,
   Vignette,
 } from "@react-three/postprocessing";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { BlendFunction } from "postprocessing";
 import type { CSSProperties, FC } from "react";
-import { useMemo } from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { useEffect, useMemo } from "react";
+import {
+  AbsoluteFill,
+  getRemotionEnvironment,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import * as THREE from "three";
 import { mulberry32 } from "../../utils/prng";
 import { lerpHex } from "../../utils/kinetics";
+
+export type FieldQuality = "auto" | "preview" | "high";
 
 export interface BackgroundFieldProps {
   background?: string;
@@ -23,6 +30,10 @@ export interface BackgroundFieldProps {
   caX?: number;
   caY?: number;
   grain?: number;
+  /** "auto" (default) = full quality while rendering, light during Studio preview. */
+  quality?: FieldQuality;
+  /** When false, the (expensive) EffectComposer post pipeline is skipped entirely. */
+  postFx?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -36,7 +47,18 @@ interface FieldProps {
   caX: number;
   caY: number;
   grain: number;
+  usePost: boolean;
 }
+
+const RenderOnFrame: FC<{ frame: number }> = ({ frame }) => {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  useEffect(() => {
+    gl.render(scene, camera);
+  }, [frame, gl, scene, camera]);
+  return null;
+};
 
 const Field: FC<FieldProps> = ({
   background,
@@ -47,6 +69,7 @@ const Field: FC<FieldProps> = ({
   caX,
   caY,
   grain,
+  usePost,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -108,23 +131,27 @@ const Field: FC<FieldProps> = ({
         </points>
       </group>
 
-      <EffectComposer multisampling={0}>
-        <Bloom
-          mipmapBlur
-          intensity={0.7 + mood * 0.6}
-          luminanceThreshold={0.12}
-          luminanceSmoothing={0.25}
-          radius={0.78}
-          levels={7}
-        />
-        <ChromaticAberration
-          offset={offset}
-          radialModulation
-          modulationOffset={0.42}
-        />
-        <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={grain} />
-        <Vignette eskil={false} offset={0.24} darkness={0.62} />
-      </EffectComposer>
+      {usePost ? (
+        <EffectComposer multisampling={0}>
+          <Bloom
+            mipmapBlur
+            intensity={0.7 + mood * 0.6}
+            luminanceThreshold={0.12}
+            luminanceSmoothing={0.25}
+            radius={0.78}
+            levels={7}
+          />
+          <ChromaticAberration
+            offset={offset}
+            radialModulation
+            modulationOffset={0.42}
+          />
+          <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={grain} />
+          <Vignette eskil={false} offset={0.24} darkness={0.62} />
+        </EffectComposer>
+      ) : (
+        <RenderOnFrame frame={frame} />
+      )}
     </>
   );
 };
@@ -138,26 +165,35 @@ export const BackgroundField: FC<BackgroundFieldProps> = ({
   caX = 0.0012,
   caY = 0.0008,
   grain = 0.12,
+  quality = "auto",
+  postFx = true,
   className,
   style,
-}) => (
-  <AbsoluteFill className={className} style={style}>
-    <Canvas
-      frameloop="always"
-      dpr={1}
-      gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
-      camera={{ fov: 58, position: [0, 0, 9], near: 0.1, far: 100 }}
-    >
-      <Field
-        background={background}
-        particleColor={particleColor}
-        accentColor={accentColor}
-        count={count}
-        mood={mood}
-        caX={caX}
-        caY={caY}
-        grain={grain}
-      />
-    </Canvas>
-  </AbsoluteFill>
-);
+}) => {
+  const { isRendering } = getRemotionEnvironment();
+  const highQuality = quality === "high" || (quality === "auto" && isRendering);
+  const renderCount = highQuality ? count : Math.max(1, Math.round(count * 0.5));
+
+  return (
+    <AbsoluteFill className={className} style={style}>
+      <Canvas
+        frameloop={highQuality ? "always" : "never"}
+        dpr={highQuality ? 1 : 0.75}
+        gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
+        camera={{ fov: 58, position: [0, 0, 9], near: 0.1, far: 100 }}
+      >
+        <Field
+          background={background}
+          particleColor={particleColor}
+          accentColor={accentColor}
+          count={renderCount}
+          mood={mood}
+          caX={caX}
+          caY={caY}
+          grain={grain}
+          usePost={highQuality && postFx}
+        />
+      </Canvas>
+    </AbsoluteFill>
+  );
+};

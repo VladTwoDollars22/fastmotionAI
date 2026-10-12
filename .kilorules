@@ -80,6 +80,10 @@ rule, follow the rule and flag the conflict — never silently ignore a rule.
   frame-stable fallback AND an error boundary that renders a deterministic fallback, so a
   slow or failed asset never breaks a frame or produces a blank/black render.
 - No per-frame allocations (hoist `THREE.Vector3` etc.); reuse geometries/materials.
+- **Preview performance is a requirement.** Derive quality from `getRemotionEnvironment()`
+  (full only while rendering): no `EffectComposer`/large `dpr` in Studio preview, instance
+  repeated meshes, and never run chained SVG goo filters, large `feGaussianBlur`, or
+  full-layer CSS `blur()` per frame (rules 01 §15, 04 §1/§5/§6).
 - Reuse existing components (`src/components/{ui,3d,audio}/`) instead of duplicating primitives.
 - Never log secrets; never commit secrets or rendered media.
 
