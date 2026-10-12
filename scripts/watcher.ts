@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, "..");
 const INPUT_DIR = path.join(ROOT, "input");
 const OUTPUT_DIR = path.join(ROOT, "output");
 const ENTRY = "src/index.ts";
-const COMPOSITION = "MainVideo";
+const COMPOSITION = "TemplateVideo";
 const REMOTION_CLI = path.join(
   ROOT,
   "node_modules",
