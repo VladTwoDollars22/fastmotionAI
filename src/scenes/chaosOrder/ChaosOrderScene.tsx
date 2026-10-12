@@ -141,7 +141,7 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
           transform: `translate(${cam.x}px, ${cam.y}px) rotate(${cam.roll}deg) scale(${cam.zoom * 1.08})`,
         }}
       >
-        <Sequence from={0} durationInFrames={SCENE_FRAMES}>
+        <Sequence durationInFrames={SCENE_FRAMES}>
           <SceneChaos palette={palette} energy={palette.energy} copy={copy} />
         </Sequence>
         <Sequence from={SCENE_FRAMES} durationInFrames={SCENE_FRAMES}>

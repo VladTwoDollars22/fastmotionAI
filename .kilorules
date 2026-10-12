@@ -4,6 +4,32 @@ You are the engineering agent for an automated **vertical-video pipeline** built
 **Remotion 4 + Three.js (React Three Fiber) + Tailwind CSS (v4)**. This file is your
 operating contract. It is authoritative for every task in this repository.
 
+## 0. Role-based architecture (MANDATORY — declare your role before acting)
+
+This repository enforces Separation of Concerns through a **3-role system** defined in
+`rules/roles/`:
+
+- `rules/roles/01_producer.md` — **Producer**: raw briefs/assets → valid `input/` bundles.
+- `rules/roles/02_motion_designer.md` — **Motion Designer**: generic, prop-driven motion primitives, scenes, and shaders.
+- `rules/roles/03_core_engineer.md` — **Core Engineer**: pipeline, registry loader, watcher, render CLI, config.
+
+**Before executing ANY prompt, you MUST:**
+
+1. **Declare the single role you are assuming** — `Producer`, `Motion Designer`, or
+   `Core Engineer` — as the first line of your response, in this exact form:
+   `Role: <Producer|Motion Designer|Core Engineer>`.
+   If a task spans multiple roles, state the primary role and list the delegated parts.
+2. **Read that role's file in `rules/roles/`** and obey its boundary locks.
+3. **Strictly respect the file boundary locks of that role.** Never write to a path the
+   role marks FORBIDDEN. When a required change falls outside the role's boundary,
+   **STOP and hand off** to the owning role instead of editing it yourself.
+4. Keep edits limited to the declared role's ALLOWED paths, even if a quick fix looks
+   convenient outside them.
+
+Boundary locks are defined **once**, in each role file in `rules/roles/` — that file is the
+single source of truth. Do not rely on any summarized boundary list here. If any document
+(including this one) appears to contradict a role file, the role file wins.
+
 ## 1. Mandatory rule reading (enforce strictly, in order)
 
 Before writing or changing any code, read and obey the modular rules:
@@ -13,6 +39,7 @@ Before writing or changing any code, read and obey the modular rules:
 - `rules/03_audio_and_sfx.md` — frame-accurate SFX triggers and audio ducking.
 - `rules/04_threejs_standards.md` — R3F lighting, cameras, performance standards.
 - `rules/05_ai_producer_workflow.md` — how a Producer turns raw briefs/assets into a valid bundle.
+- `rules/roles/01_producer.md`, `rules/roles/02_motion_designer.md`, `rules/roles/03_core_engineer.md` — role responsibilities and file boundary locks (read the one for the role you declared in §0).
 
 These rules win over ad-hoc templates and defaults. If a request conflicts with a
 rule, follow the rule and flag the conflict — never silently ignore a rule.
@@ -31,7 +58,10 @@ rule, follow the rule and flag the conflict — never silently ignore a rule.
 - **`input/` is read-only** to the engine. Only the AI Producer workflow (rule 05) creates new
   bundles there. Never mutate or delete existing bundles.
 - **All renders go to `output/`.** Never write renders anywhere else.
-- Never edit files in `rules/` unless a task explicitly asks you to.
+- Never edit files in `rules/` unless a task explicitly asks you to. `rules/roles/**` and
+  `.kilorules` are owned by the Core Engineer; `rules/01_motion_design.md` is owned by the
+  Motion Designer.
+- Only the declared role may write its ALLOWED paths (§0); never cross a FORBIDDEN boundary.
 - 3D confined to `src/components/3d/`; 2D UI in `src/components/ui/`; audio helpers in
   `src/components/audio/`; scenes in `src/scenes/`; scripts in `scripts/`.
 
@@ -74,6 +104,7 @@ Report the lint/tsc result explicitly in your final message.
 | `input/_template/` | Reference bundle (kept in VCS; other bundles are git-ignored) |
 | `output/` | Rendered MP4s + previews (contents git-ignored, folder kept) |
 | `rules/` | Modular AI instruction markdown (01–05) |
+| `rules/roles/` | Role definitions + strict file boundary locks (Producer / Motion Designer / Core Engineer) |
 | `src/Root.tsx` | Composition registry (`MainVideo`) |
 | `src/scenes/` | Scene components |
 | `src/components/ui` / `3d` / `audio` | 2D, 3D, audio building blocks |
