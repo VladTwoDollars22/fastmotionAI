@@ -1,0 +1,38 @@
+# Cursor Rules — Motion Designer Pipeline
+
+This repository builds vertical (9:16) videos with **Remotion + Three.js (R3F) + Tailwind CSS**.
+All work MUST comply with the modular rule files in `rules/`. Read them before writing code.
+
+## Mandatory reading (in order)
+
+- `rules/01_motion_design.md` — frame-bound animation (`useCurrentFrame()`, `spring()`), 30 FPS, 1080x1920, easing physics.
+- `rules/02_project_bundle_parsing.md` — how to parse `input/<project>/{prompt.txt,styleguide.json,content.json,sources/}`.
+- `rules/03_audio_and_sfx.md` — frame-accurate SFX triggers and audio ducking.
+- `rules/04_threejs_standards.md` — R3F lighting, cameras, and performance standards.
+- `rules/05_ai_producer_workflow.md` — how the AI Producer Agent turns raw briefs/assets into a valid `input/<project_id>/` bundle.
+
+If a rule file and an ad-hoc request conflict, the rule file wins unless the user
+explicitly overrides that specific rule. On conflict, flag it and continue on the rest.
+
+## Hard constraints (summary — full text in `rules/`)
+
+- Canvas: **1080x1920**, **30 FPS**, default **300 frames**. Root composition id: **`MainVideo`**.
+- Animation is a pure function of `frame`. No CSS transitions/keyframes, `setTimeout`,
+  `setInterval`, `requestAnimationFrame`, `Date.now()`, or unseeded `Math.random()`
+  (use Remotion's `random()`).
+- Scene components live in `src/scenes/`; 2D UI in `src/components/ui/`;
+  3D/R3F in `src/components/3d/`; audio helpers in `src/components/audio/`.
+- Assets: SFX in `src/assets/audio/sfx/`, music in `src/assets/audio/music/`.
+  Reference runtime assets with `staticFile()`.
+- `input/` is read-only source of truth. Never invent content not present in the bundle.
+- Render output goes to `output/`. Automation scripts go to `scripts/`.
+
+## Verification
+
+Before considering work done:
+- `npm run lint` (runs `eslint src && tsc`) must pass with zero errors.
+- `npx remotion studio` for preview; `npx remotion render MainVideo output/<name>.mp4` to render.
+
+Do not add dependencies without checking `package.json` first. Prefer existing
+libraries already installed (three, @react-three/fiber, @react-three/drei, gsap,
+framer-motion, lucide-react, @remotion/media-utils).

@@ -1,0 +1,110 @@
+# Kilo Code Rules — Motion Designer Pipeline
+
+You are the engineering agent for an automated **vertical-video pipeline** built on
+**Remotion 4 + Three.js (React Three Fiber) + Tailwind CSS (v4)**. This file is your
+operating contract. It is authoritative for every task in this repository.
+
+## 1. Mandatory rule reading (enforce strictly, in order)
+
+Before writing or changing any code, read and obey the modular rules:
+
+- `rules/01_motion_design.md` — frame-bound animation (`useCurrentFrame()`, `spring()`), 30 FPS, 1080x1920, easing physics.
+- `rules/02_project_bundle_parsing.md` — parsing `input/<project>/{prompt.txt,styleguide.json,content.json,sources/}`.
+- `rules/03_audio_and_sfx.md` — frame-accurate SFX triggers and audio ducking.
+- `rules/04_threejs_standards.md` — R3F lighting, cameras, performance standards.
+- `rules/05_ai_producer_workflow.md` — how a Producer turns raw briefs/assets into a valid bundle.
+
+These rules win over ad-hoc templates and defaults. If a request conflicts with a
+rule, follow the rule and flag the conflict — never silently ignore a rule.
+
+## 2. Hard constraints (non-negotiable)
+
+- **Canvas is 1080x1920 @ 30 FPS**, default duration **300 frames** (composition id `MainVideo`).
+- **Deterministic animation only.** Every animated value derives from `useCurrentFrame()`
+  (and `useVideoConfig()`). FORBIDDEN: `setTimeout`, `setInterval`, `requestAnimationFrame`,
+  `Date.now()`, `performance.now()`, CSS transitions/keyframes, and unseeded `Math.random()`
+  (use Remotion's `random()`).
+- **No real-time audio APIs.** Never use `AudioContext` or Web Audio scheduling. Audio uses
+  Remotion `<Audio>` + `<Sequence from={int}>` at 30 fps, with frame-driven gain envelopes.
+- **`staticFile()` for every runtime asset.** Never pass OS/relative filesystem paths to
+  Remotion media; assets are served from `public/` (bundles are generated into `public/bundles/`).
+- **`input/` is read-only** to the engine. Only the AI Producer workflow (rule 05) creates new
+  bundles there. Never mutate or delete existing bundles.
+- **All renders go to `output/`.** Never write renders anywhere else.
+- Never edit files in `rules/` unless a task explicitly asks you to.
+- 3D confined to `src/components/3d/`; 2D UI in `src/components/ui/`; audio helpers in
+  `src/components/audio/`; scenes in `src/scenes/`; scripts in `scripts/`.
+
+## 3. Code quality guidelines
+
+- **Strict TypeScript.** Zero `tsc` errors. No `any` (use `unknown` + guards). No unused
+  imports, variables, or parameters (`noUnusedLocals` is on).
+- **Frame-clamp every `interpolate()`**: pass `extrapolateLeft: "clamp"` and
+  `extrapolateRight: "clamp"` unless an overshoot is intentional and documented.
+- **Springs** always pass explicit `fps` and a `config`; guard `frame` to `>= 0`
+  (`Math.max(0, frame - delay)`).
+- **Three.js**: `frameloop="never"` with an explicit per-frame `gl.render()`; drive all
+  motion from `useCurrentFrame()`; cap `dpr` to `[1, 2]`; no independent animation loops.
+- **Mandatory error boundaries + Suspense for Three.js assets.** Any `<Canvas>` subtree that
+  loads assets (`useGLTF`, `useTexture`, async) MUST be wrapped in a `<Suspense>` with a
+  frame-stable fallback AND an error boundary that renders a deterministic fallback, so a
+  slow or failed asset never breaks a frame or produces a blank/black render.
+- No per-frame allocations (hoist `THREE.Vector3` etc.); reuse geometries/materials.
+- Reuse existing components (`src/components/{ui,3d,audio}/`) instead of duplicating primitives.
+- Never log secrets; never commit secrets or rendered media.
+
+## 4. Verification gate (MANDATORY before reporting anything complete)
+
+Before you consider any generated scene, component, rule, or script finished:
+
+1. Run **`npm run lint`** (which executes `eslint src && tsc`).
+   Equivalent: **`npx tsc --noEmit`** for types alone.
+2. Fix **all** errors and warnings. Do not report completion with a failing lint/tsc.
+3. When a visual change is made, also sanity-check with a still render:
+   `npx remotion still MainVideo output/preview.png --frame=60`
+   (or `npx remotion studio` for interactive review).
+
+Report the lint/tsc result explicitly in your final message.
+
+## 5. Project map
+
+| Path | Purpose |
+| ---- | ------- |
+| `input/<project>/` | Read-only bundles (`prompt.txt`, `styleguide.json`, `content.json`, `sources/`) |
+| `input/_template/` | Reference bundle (kept in VCS; other bundles are git-ignored) |
+| `output/` | Rendered MP4s + previews (contents git-ignored, folder kept) |
+| `rules/` | Modular AI instruction markdown (01–05) |
+| `src/Root.tsx` | Composition registry (`MainVideo`) |
+| `src/scenes/` | Scene components |
+| `src/components/ui` / `3d` / `audio` | 2D, 3D, audio building blocks |
+| `src/utils/projectLoader.ts` | Bundle loader (registry-backed) |
+| `src/utils/bundleRegistry.generated.ts` | AUTO-GENERATED; never edit by hand |
+| `scripts/` | Automation (`generate-bundles.mjs`, `watcher.ts`, producer prompt) |
+| `public/bundles/` | Generated from `input/` by `npm run bundles` (git-ignored) |
+
+## 6. Commands
+
+- Preview studio: `npx remotion studio` (or `npm run dev`, which runs `bundles` first)
+- Lint / typecheck: `npm run lint` (`eslint src && tsc`)
+- Register bundles + copy assets: `npm run bundles`
+- Render: `npx remotion render src/index.ts MainVideo output/<name>.mp4 --props='{"projectId":"<id>"}'`
+- Watch & auto-render new bundles: `npm run watch`
+- Bundle only: `npm run build`
+
+The Remotion **entry point is `src/index.ts`** (it calls `registerRoot`); `src/Root.tsx`
+exports the root component and is NOT a valid CLI entry.
+
+## 7. Pipeline behavior
+
+- **Producer (rule 05)**: raw brief + assets → valid bundle in `input/<project_id>/`.
+- **Registry**: `npm run bundles` scans `input/`, inlines bundle JSON into
+  `bundleRegistry.generated.ts`, and copies `sources/` into `public/bundles/<id>/`.
+- **Renderer**: `scripts/watcher.ts` watches `input/`, validates new/changed bundles, runs
+  the registry step, then renders `output/<id>.mp4` with `--props={"projectId":"<id>"}`.
+- A bundle is only renderable after it is registered; always run `npm run bundles` before render.
+
+## 8. Environment notes
+
+- `node_modules` is hosted on the `D:` drive via a directory junction; the npm cache is
+  redirected to `D:` via `.npmrc`. Do **not** delete the junction or the cache config.
+- `C:` has very little free space — avoid large artifacts outside `D:`.

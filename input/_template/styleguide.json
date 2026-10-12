@@ -1,0 +1,24 @@
+{
+  "brand": "Aurora",
+  "themeMode": "dark",
+  "colors": {
+    "primary": "#7C5CFF",
+    "accent": "#22D3EE",
+    "background": "#070713",
+    "text": "#F5F7FF",
+    "muted": "#9AA3B2"
+  },
+  "fonts": {
+    "heading": "Inter",
+    "body": "Inter"
+  },
+  "motion": {
+    "speed": "normal",
+    "transition": "slide-up"
+  },
+  "threePreset": "floating-cards",
+  "music": {
+    "src": "sources/music.wav",
+    "volume": 0.3
+  }
+}

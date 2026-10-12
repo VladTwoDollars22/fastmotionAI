@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "title": "Aurora Launch",
+    "fps": 30,
+    "width": 1080,
+    "height": 1920
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "three",
+      "durationInFrames": 110,
+      "headline": "Aurora",
+      "body": "Design that moves with you.",
+      "media": "sources/logo.png",
+      "sfx": [{ "src": "whoosh", "atFrame": 0, "duck": true }],
+      "transitionOut": "slide-up"
+    },
+    {
+      "id": "feature",
+      "type": "text",
+      "durationInFrames": 110,
+      "headline": "Built for Motion",
+      "body": "Frame-accurate, deterministic, stunning.",
+      "media": "sources/product.jpg",
+      "sfx": [{ "src": "pop", "atFrame": 12, "duck": true }],
+      "transitionOut": "fade"
+    },
+    {
+      "id": "cta",
+      "type": "text",
+      "durationInFrames": 80,
+      "headline": "Get Started",
+      "body": "Aurora - available now.",
+      "sfx": [{ "src": "ding", "atFrame": 10, "duck": true }],
+      "transitionOut": "fade"
+    }
+  ],
+  "cta": "Try Aurora today",
+  "voiceover": {
+    "src": "sources/voiceover.wav",
+    "atFrame": 20,
+    "durationInFrames": 120
+  }
+}

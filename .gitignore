@@ -1,7 +1,32 @@
-node_modules
-dist
+# ---- Dependencies ----
+node_modules/
+
+# ---- Build / cache artifacts ----
+dist/
+build/
+out/
+.remotion/
+*.tsbuildinfo
+
+# ---- Generated bundle assets (created by `npm run bundles`) ----
+public/bundles/
+
+# ---- OS / editor noise ----
 .DS_Store
+Thumbs.db
+
+# ---- Environment ----
 .env
 
-# Ignore the output video from Git but not videos you import into src/.
-out
+# ---- Rendered videos: keep the folder, ignore every render ----
+output/*
+!output/.gitkeep
+
+# ---- Project bundles: keep the folder markers + the reference template ----
+input/*
+!input/.gitkeep
+!input/_template/
+!input/_template/**
+
+# ---- Test / scratch ----
+*.log
