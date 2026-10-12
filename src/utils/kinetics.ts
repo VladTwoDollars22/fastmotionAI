@@ -100,6 +100,30 @@ export const floatOffset = (
   };
 };
 
+/**
+ * Smooth, deterministic floating offset — sine-based, **no noise**. Use this for
+ * all ambient secondary motion so movement stays rock-solid and jitter-free
+ * (`rules/roles/02_motion_designer.md` §3.6). The seed only sets a stable phase
+ * so layers are de-synchronised; there is no per-frame randomness.
+ */
+export const sineFloat = (
+  frame: number,
+  seed: string,
+  ampX: number,
+  ampY: number,
+  period = 150,
+  phase = 0,
+): Float => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  const p = phase + (hash % 1000) / 1000;
+  const w = (Math.PI * 2) / Math.max(30, period);
+  return {
+    x: ampX * Math.sin(frame * w + p * Math.PI * 2),
+    y: ampY * Math.cos(frame * w * 0.8 + p * Math.PI * 2 * 1.3),
+  };
+};
+
 export const spin = (
   frame: number,
   seed: string,

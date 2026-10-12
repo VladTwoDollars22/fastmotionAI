@@ -58,6 +58,26 @@ Guardrails (elevation never overrides the engine contract):
 
 ---
 
+## 1.2 — Default Edvano theme determination (mandatory)
+
+The Producer decides `themeMode` and owns the default. Unless the brief/`prompt.txt`
+**explicitly forces dark mode**, every Edvano bundle MUST default to the clean, high-end
+**Light** theme (`.kilorules` §2):
+
+| Token | Value |
+| ----- | ----- |
+| `colors.background` | `#F8FAFC` |
+| UI cards | `#FFFFFF` (white) with soft borders `#E2E8F0` and crisp drop-shadows |
+| `colors.primary` | `#4F46E5` |
+| `colors.accent` | `#10B981` |
+| `colors.text` | `#0F172A` |
+
+- Set `themeMode: "light"` and emit the palette tokens above by default. Emit a dark theme
+  only when the brief explicitly requests it (e.g. "dark mode", "dark theme", "тёмная
+  тема"); note the decision in `prompt.txt`.
+
+---
+
 ## 2. Boundary locks (STRICT)
 
 | Access | Paths |
@@ -88,6 +108,9 @@ changes belong to **Core Engineer**; primitive/component/scene changes belong to
 7. **Elevate the brief as Senior Motion Creative Director (§1.1).** Add cinematic pacing,
    visual dynamism, styling nuance, and refined wording; structure the scenes like an
    agency treatment — within the exact schemas and without inventing facts.
+8. **Default the Edvano theme to Light (§1.2).** Emit `themeMode: "light"` with the
+   `#F8FAFC` / `#FFFFFF` / `#4F46E5` / `#10B981` / `#0F172A` palette unless the brief
+   explicitly forces dark mode.
 
 ---
 
@@ -108,6 +131,8 @@ changes belong to **Core Engineer**; primitive/component/scene changes belong to
 - [ ] The brief was **elevated, not transcribed** (§1.1): cinematic beat structure,
       dynamic energy, styling nuance, and polished copy — with no fabricated facts and no
       rewrite of verbatim user copy.
+- [ ] **Theme default (§1.2):** `themeMode` is `light` with the Edvano light palette unless
+      `prompt.txt` explicitly forces dark mode.
 - [ ] All asset references resolve on disk; filenames are sanitized.
 - [ ] `styleguide.json` and `content.json` validate against rules 05 §5/§6.
 - [ ] `fps`=30, `1080x1920`, duration sum == composition duration.

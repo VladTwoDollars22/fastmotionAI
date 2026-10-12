@@ -64,6 +64,26 @@ rule, follow the rule and flag the conflict — never silently ignore a rule.
 - Only the declared role may write its ALLOWED paths (§0); never cross a FORBIDDEN boundary.
 - 3D confined to `src/components/3d/`; 2D UI in `src/components/ui/`; audio helpers in
   `src/components/audio/`; scenes in `src/scenes/`; scripts in `scripts/`.
+- **Absolute motion stability (no shake / no jitter) — non-negotiable.** NEVER apply random
+  noise offsets, micro-jitter, or frame-by-frame wiggle to UI cards, text, or camera
+  coordinates. All motion is either rock-solid clamped linear transfers (constant velocity
+  between keyframes) or spring interpolations with `stiffness: 180–240` and `damping: 14–18`.
+  Continuous ambient movement uses smooth deterministic sine/pulse or springs only — never
+  `noise2D` jitter or unseeded `Math.random()`. Springs must settle and stay at rest; a value
+  that keeps vibrating frame-to-frame is a defect. The camera holds a fixed transform by
+  default, with at most a single damped impact impulse (`dampedImpulse`) that decays to zero.
+  This rule is the **authoritative global override** of the noise / "organic wiggle" reading in
+  `rules/01_motion_design.md` §6/§7 for focal UI text, cards, and the camera (ambient energy
+  stays, expressed as smooth sine/pulse/spring). Flag any remaining conflict in `rules/01`.
+- **Default Edvano Light theme — non-negotiable.** Unless `prompt.txt` explicitly forces dark
+  mode, Edvano promos default to the clean, high-end Light theme: background `#F8FAFC`; UI
+  cards `#FFFFFF` with soft borders `#E2E8F0` and crisp drop-shadows; primary indigo
+  `#4F46E5`; accent emerald `#10B981`; text dark slate `#0F172A`. Honour a dark palette only
+  when the brief explicitly requests dark mode.
+- **Rich scene density — non-negotiable.** Every scene composes multiple active layers: the
+  main kinetic text, a primary UI focus card, AND supporting environmental elements (floating
+  metric badges, glowing node paths, status indicators, live progress fills) so the frame
+  feels full, rich, and high-production — without cluttering the focal text/cards.
 
 ## 3. Code quality guidelines
 

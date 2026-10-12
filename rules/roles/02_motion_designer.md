@@ -162,17 +162,72 @@ Refines `rules/01_motion_design.md` §17.
 Refines `rules/01_motion_design.md` §18. A scene is a living environment, not a single
 object on a slide.
 
+- **Multiple active layers (mandate).** Every scene MUST compose, at minimum, three layer
+  classes: **(1) the main kinetic text**, **(2) a primary UI focus card**, and
+  **(3) supporting environmental elements** — floating metric badges, glowing node paths,
+  status indicators, live progress fills. A frame with a lone element is a defect.
 - **Density.** Beyond the hero, layer supporting ambient/UI objects and micro-animations
   (floating metric chips, subtle grid pulses, particle drifts, background connection rays,
   status dots, breathing gauges) — more than the basic brief strictly lists.
 - **Micro-activity.** Secondary elements keep moving on the §3.4 ~12–15 frame cadence;
-  nothing freezes while the hero performs.
+  nothing freezes while the hero performs. All such motion is smooth sine/pulse/spring
+  (§3.6) — never noise jitter.
 - **Non-intrusive harmony.** Secondary elements MUST enrich the composition and never
   clutter the viewport or distract from the primary kinetic text and focal UI cards. Keep a
   clear focal > supporting > ambient hierarchy (lower contrast/opacity/amplitude as you go
   back) and keep focal reading zones uncluttered inside the safe area.
 - **Performance-aware.** Add richness with cheap, memoized, frame-driven motion within the
   per-beat element budget — never per-frame filter storms.
+
+---
+
+## 3.6 — ABSOLUTE MOTION STABILITY (NO SHAKE / NO JITTER) (mandatory)
+
+Motion stability is a hard requirement (see `.kilorules` §2, authoritative). The frame must
+read as **rock-solid, premium, and deliberate** — never buzzy, vibrationy, or "handheld".
+
+- **FORBIDDEN.** NEVER apply random-noise offsets, micro-jitter, or frame-by-frame wiggle to
+  UI cards, text, or camera coordinates. No `noise2D`/`random()`-driven position, rotation,
+  or scale on focal/UI/text layers or the camera; no per-frame random shake; no alternating
+  sign flips; no rounding flicker.
+- **ALLOWED motion — two families only:**
+  1. **Rock-solid linear transfers** — clamped `interpolate()` moves that hold a clean,
+     constant velocity between keyframes (no wobble in between).
+  2. **Spring interpolations** — `spring({ frame, fps, config })` with
+     `stiffness: 180–240` and `damping: 14–18` (settles cleanly with no ringing).
+- **Smooth oscillation, not noise.** Any continuous ambient movement MUST come from a smooth,
+  deterministic sine/pulse (`Math.sin(frame / period)`) or a spring, with a small clamped
+  amplitude — never from `noise2D` jitter or unseeded `Math.random()`.
+- **Settle, don't wobble.** Springs must reach rest and stay there; a value that keeps
+  vibrating frame-to-frame is a defect. Add damping rather than lowering frequency.
+- **Camera is rock-solid.** The camera holds a fixed transform by default; any authored
+  impact uses a single **damped** impulse envelope (`dampedImpulse`) that decays to zero —
+  never sustained or high-frequency vibration.
+- **Override (authoritative).** For focal UI text, cards, and the camera this supersedes the
+  noise/"organic wiggle" reading of `rules/01_motion_design.md` §6/§7. Ambient *energy* is
+  still required (§3.3/§3.4/§3.5), but it is expressed with smooth sine/pulse/spring motion,
+  never noise jitter. Motion Designer MUST reconcile `rules/01` §6/§7 to match.
+
+---
+
+## 3.7 — DEFAULT EDVANO LIGHT THEME (mandatory)
+
+Unless `prompt.txt` **explicitly forces dark mode**, every Edvano promo MUST render in the
+clean, high-end Light theme:
+
+| Token | Value |
+| ----- | ----- |
+| Background | `#F8FAFC` |
+| UI cards | `#FFFFFF` with soft borders `#E2E8F0` and crisp drop-shadows |
+| Primary Indigo | `#4F46E5` |
+| Accent Emerald | `#10B981` |
+| Text | Dark Slate `#0F172A` |
+
+- Resolve the theme from the bundle (`styleguide.themeMode` + `palette` tokens); default to
+  **light** and only honour a dark palette when the brief **explicitly** requests it (e.g.
+  "dark mode", "dark theme", "тёмная тема"). Flag the choice in the report.
+- Keep cards crisp: white surfaces, `#E2E8F0` borders, soft layered shadows; body text is
+  `#0F172A` on light surfaces with strong contrast (never low-contrast grey).
 
 ---
 
@@ -189,9 +244,11 @@ object on a slide.
 5. **Active environment & background evolution.** Backgrounds are never static solid color;
    every transition evolves the gradient, grid depth, lighting angle, and/or theme
    (rule 01 §13).
-6. **Smooth, anti-jitter camera physics.** All camera moves use damped springs
-   (`spring({ fps, damping: 30, stiffness: 90 })`) / `dampedImpulse` and low-frequency noise —
-   never raw per-frame jitter (rule 01 §7/§14, rule 04 §2).
+6. **Rock-solid motion stability (§3.6).** No noise offsets, micro-jitter, or frame-by-frame
+   wiggle on UI cards, text, or the camera. Motion is only rock-solid clamped linear
+   transfers or springs (`stiffness: 180–240`, `damping: 14–18`); continuous ambient motion
+   is smooth sine/pulse/spring. The camera holds a fixed transform with at most a single
+   damped impact impulse (`.kilorules` §2, overriding the rule 01 §7/§14 noise readings).
 7. **Mesmerizing flow.** Every beat hands off via organic morph, line trace, or particle
    dissolution — no hard cuts or plain crossfades (rule 01 §8/§14).
 8. **Performance-aware motion.** Memoize frame-independent math/`noise2D` sets
@@ -216,6 +273,9 @@ object on a slide.
 14. **Layer rich, non-intrusive atmosphere (§3.5).** Add supporting ambient/UI objects and
     micro-animations beyond the brief so scenes feel dense and alive — while keeping a clear
     hierarchy and never cluttering the focal text/cards (rule 01 §18).
+15. **Default to the Edvano Light theme (§3.7).** Unless the brief explicitly forces dark
+    mode, render Edvano promos in the clean light theme (background `#F8FAFC`, white cards
+    with `#E2E8F0` borders, indigo `#4F46E5`, emerald `#10B981`, slate `#0F172A`).
 
 ---
 
@@ -233,6 +293,14 @@ object on a slide.
 - [ ] No hardcoded project-specific text or brand colors in the changed files.
 - [ ] All new/changed components are prop-driven and generic.
 - [ ] No static center anchor; focal point moves across quadrants; background evolves (§4).
+- [ ] **Absolute motion stability (§3.6):** no noise offsets / micro-jitter / frame-by-frame
+      wiggle on UI cards, text, or the camera; motion is clamped linear transfers + springs
+      (`stiffness: 180–240`, `damping: 14–18`) only; ambient motion is smooth sine/pulse/spring.
+- [ ] **Rich density (§3.5):** scene composes ≥3 layer classes — kinetic text + focal UI card
+      + supporting environment (badges / node paths / status dots / progress fills).
+- [ ] **Edvano Light theme (§3.7):** promo defaults to the light theme (bg `#F8FAFC`, white
+      cards `#FFFFFF`/`#E2E8F0`, indigo `#4F46E5`, emerald `#10B981`, text `#0F172A`) unless
+      `prompt.txt` explicitly forces dark.
 - [ ] Camera uses damped-spring physics; no raw jitter; no per-frame filter storms.
 - [ ] Mandatory SFX pipeline authored (§3.1): UI clicks, transition whooshes, alert
       impacts, and gauge/ticker/success chimes are wired to the beat frames; the video

@@ -3,6 +3,296 @@
 import type { RawBundle } from "./projectLoader";
 
 export const BUNDLE_REGISTRY: Record<string, RawBundle> = {
+  "edvano_os_launch_16x9": {
+    "styleguide": {
+      "brand": "EDVANO OS — The Ultimate Business Ecosystem",
+      "themeMode": "light",
+      "colors": {
+        "primary": "#4F46E5",
+        "accent": "#10B981",
+        "background": "#F8FAFC",
+        "text": "#0F172A",
+        "muted": "#64748B"
+      },
+      "fonts": {
+        "heading": "Inter, sans-serif",
+        "body": "Inter, sans-serif"
+      },
+      "motion": {
+        "speed": "fast",
+        "transition": "fade"
+      },
+      "threePreset": "mixed",
+      "music": {
+        "src": null,
+        "volume": 0.3
+      },
+      "palette": {
+        "background": "#F8FAFC",
+        "card": "#FFFFFF",
+        "cardBorder": "#E2E8F0",
+        "primary": "#4F46E5",
+        "accent": "#10B981",
+        "crimson": "#EF4444",
+        "textDark": "#0F172A",
+        "textMuted": "#64748B",
+        "glow": "rgba(79, 70, 229, 0.12)"
+      },
+      "motionPresets": {
+        "entranceBounce": {
+          "damping": 14,
+          "stiffness": 220,
+          "mass": 0.9
+        },
+        "smoothSettle": {
+          "damping": 18,
+          "stiffness": 180,
+          "mass": 1
+        },
+        "snappyAccent": {
+          "damping": 14,
+          "stiffness": 240,
+          "mass": 0.8
+        },
+        "snappy3d": {
+          "damping": 12,
+          "stiffness": 220
+        },
+        "liquidFlow": {
+          "damping": 18,
+          "stiffness": 140
+        },
+        "elasticPunch": {
+          "damping": 10,
+          "stiffness": 260
+        }
+      },
+      "aspectRatio": "16:9",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fps": 30,
+      "durationInFrames": 900,
+      "features": {
+        "enable3dPerspective": true,
+        "enableParallaxDepth": true,
+        "disableTextGlints": true,
+        "densityTarget": "hyper_dense"
+      }
+    },
+    "content": {
+      "meta": {
+        "title": "EDVANO OS — The Ultimate Business Ecosystem (16:9 Keynote)",
+        "fps": 30,
+        "width": 1920,
+        "height": 1080
+      },
+      "scenes": [
+        {
+          "id": "chaos_explosion_3d",
+          "type": "chaos_explosion_3d",
+          "durationInFrames": 150,
+          "headline": "Хаос из 5 подрядчиков?",
+          "body": "Дизайнер • Копирайтер • Таргетолог • Разраб • CRM-щик",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "monolith_assembly_3d",
+          "type": "monolith_assembly_3d",
+          "durationInFrames": 240,
+          "headline": "ОДНА СДЕЛКА = ГОТОВАЯ ЭКОСИСТЕМА",
+          "body": "Единая цифровая инфраструктура под ключ",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "engine_speed_3d",
+          "type": "engine_speed_3d",
+          "durationInFrames": 240,
+          "headline": "Next.js 16 • Meta CAPI • Воронки • CRM",
+          "body": "Молниеносная скорость и сквозная аналитика",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "founder_freedom_3d",
+          "type": "founder_freedom_3d",
+          "durationInFrames": 150,
+          "headline": "Ваш фокус — продукт. Наш — архитектура.",
+          "body": "Всю систему продаж берём на себя",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "keynote_outro_3d",
+          "type": "keynote_outro_3d",
+          "durationInFrames": 120,
+          "headline": "ЗАБЕРИТЕ АУДИТ АРХИТЕКТУРЫ",
+          "body": "Вашему бизнесу нужна система",
+          "media": "sources/logo.svg",
+          "sfx": [],
+          "transitionOut": "fade"
+        }
+      ],
+      "cta": "edvano.xyz",
+      "url": "edvano.xyz",
+      "voiceover": null
+    },
+    "prompt": "Title: EDVANO OS — The Ultimate Business Ecosystem (16:9 Keynote Reveal)\n\nGoal: An Apple Event / Vercel Keynote-level 30-second reveal that dramatizes the pain of juggling five contractors, assembles them into one unified EDVANO OS ecosystem, showcases the revenue engine at speed, and closes on a free architecture-audit CTA.\n\nTone: Pristine, premium, confident, high-tech. Pristine Edvano Light aesthetic — airy slate-white canvas, crisp white glassmorphism, decisive indigo, calm emerald data accents, zero clutter, flawless key-line precision.\n\nEnergy: punchy / ultra-high -> motion.speed fast\n\nAspect / format: 16:9 (1920x1080), 30 FPS, 30 seconds = 900 frames.\n\nCopy language: Russian (verbatim from the brief; do not translate).\n\nTheme: EDVANO LIGHT (explicitly forced light) — canvas #F8FAFC, cards #FFFFFF with #E2E8F0 borders and soft drop-shadows, primary indigo #4F46E5, emerald #10B981, slate text #0F172A, muted #64748B, indigo glow rgba(79,70,229,0.12).\n\nCAMERA RIG SPECS (Director of Photography)\n- 3D perspective field of view: `perspective: 1200px` on the stage.\n- Frame-by-frame 3D camera transforms: `rotateX`, `rotateY`, `translateZ` (speed-ramped dollies), wide-angle -> macro focal transitions.\n- The rig is ROCK-SOLID: no noise shake, no jitter, no handheld wobble. Camera moves are smooth spring/linear interpolations that settle and hold.\n\nSCENE DENSITY PROTOCOL\n- Zero empty space. EVERY frame carries 8-12 active visual layer elements: primary hero component, staggered kinetic headline, floating metric chips, connection laser arcs, particle fields, status pills, and a background glass grid.\n- Supporting layers enrich but never clutter the focal text/cards (clear hero > support > ambient hierarchy).\n\nMOTION & AUDIO STANDARDS\n- Rock-solid stability (ZERO noise shake); 15-frame micro-motion mandate (no static frame); liquid spring morphing transitions (no hard cuts, no plain crossfades).\n- Staggered motor typography (word-by-word, 2-3 frame offsets); text crisp and solid (no glints/sweeps on glyphs).\n- Balanced multi-variation SFX rotation across the shared library (no single asset more than twice in a row), soft peaks, plus an ambient bed. Silent video is forbidden.\n- Audio design is delegated to the shared SFX/ambient library at render time (see Notes): the brief's named cues below are the intended palette and map to the shared library ids.\n\nSHOT LIST (16:9, 30 FPS)\n\nScene 1 — Molecular Chaos & Sub-Bass Collapse (frames 0-150): \"Хаос из 5 подрядчиков?\" / \"Дизайнер • Копирайтер • Таргетолог • Разраб • CRM-щик\"\n- Camera: frames 0-90 high-speed forward dolly (translateZ -400px -> +100px) with aggressive tilt (rotateX 28deg, rotateY -15deg); frames 90-135 speed-ramp ease-out and pan right (translateX +80px) into a macro push on a red warning badge; frame 135 camera snap back (translateZ -800px), scale-punch, instant blackout collapse.\n- Layers (10): 5 3D-tilted glass cards (Figma, Telegram, Code, Excel, 5 avatars) with rose alert badges; 3 floating red alert chips (\"Overdue -2d\", \"Bug #42\", \"Unanswered\"); kinetic headline word-staggered in 3D; subtle background glass grid panel.\n- Audio: rising chaotic atmospheric hum and a rapid interface pop burst, ending on a deep sub-bass drop at frame 135.\n\nScene 2 — EDVANO OS Ecosystem Assembly (frames 150-390): \"ОДНА СДЕЛКА = ГОТОВАЯ ЭКОСИСТЕМА\" / \"Единая цифровая инфраструктура под ключ\"\n- Camera: frames 150-210 smooth 180-degree 3D orbit (rotateY -45deg -> 0deg, perspective 1200px) revealing a central glowing glass monolith cube; frames 210-330 dive in through the front face (translateZ 0px -> +350px) along the connection pipeline; frames 330-390 smooth pan up (translateY -50px) to frame the full 4-node ecosystem.\n- Layers (12): central 3D glass monolith; 4 interconnected nodes Next.js 16 Web -> Meta CAPI -> Lead Funnel -> CRM Deal Card; animated glowing laser arcs with traveling pulse dots; floating latency/uptime badges (\"12ms\", \"99.9% uptime\", \"Active Sync\"); staggered kinetic headline; background glass grid.\n- Audio: high-tech assembly clicks, electric energy hum, smooth transition whoosh.\n\nScene 3 — Revenue Engine & Speed-Ramping (frames 390-630): \"Next.js 16 • Meta CAPI • Воронки • CRM\" / \"Молниеносная скорость и сквозная аналитика\"\n- Camera: frames 390-470 macro zoom (translateZ +250px, rotateX 15deg) onto the PageSpeed Gauge spinning up; frames 470-550 whip-pan left (translateX -200px -> 0px, rotateY 25deg -> 0deg) to reveal a 3D smartphone live-switching language pills (RU -> EN -> UK); frames 550-630 ease out to a neutral wide shot (translateZ 0px) as background layers tilt back (rotateX 8deg).\n- Layers (11): spiral-spring 100/100 PageSpeed gauge with emerald particle trails; performance chips (LCP 0.4s, CLS 0.00, TTFB 0.1s); 3D floating smartphone with language pills; pop-up PUSH card (translateZ +120px) \"New Lead: $2,500\"; floating messaging pills (WhatsApp, Telegram, Email); staggered headline; pulsing node network.\n- Audio: fighter-jet pass whoosh, rapid counter ticks, tactile notification pops.\n\nScene 4 — Founder Freedom & Shield (frames 630-780): \"Ваш фокус — продукт. Наш — архитектура.\" / \"Всю систему продаж берём на себя\"\n- Camera: frames 630-720 slow continuous push-in (translateZ -100px -> +80px) with a gentle tilt wave (rotateX 5deg -> -5deg); frames 720-780 slight upward acceleration (translateY -30px) preparing the outro.\n- Layers (9): central glassmorphism control-center dashboard with live deal counter (+1, +1, +1); surrounding 3D glowing protective aura ring; floating ambient badges (\"24/7 Autopilot\", \"Conversion +34%\", \"CRM Realtime\", \"Telegram Sync\"); staggered kinetic headline.\n- Audio: air-dampened noise-cancellation sweep, warm level-up chime, soft spring float whoosh.\n\nScene 5 — Keynote Outro & CTA (frames 780-900): \"ЗАБЕРИТЕ АУДИТ АРХИТЕКТУРЫ\" / \"Вашему бизнесу нужна система\"\n- Camera: frames 780-830 extreme speed zoom-out (translateZ +300px -> -400px) through a subtle white light-flash revealing the final booking modal; frames 830-900 settle into a perfectly stable, ultra-crisp hero framing (perspective 1200px, rotateX 0deg, rotateY 0deg).\n- Layers (8): glass 3D booking modal; animated cursor typing, clicking \"Записаться\", then sliding offscreen; hero reveal of the EDVANO white logo badge (sources/logo.svg, upright at 0deg) with a glowing indigo aura; glowing primary button (\"Перейти на edvano.xyz\"); floating background Edvano ecosystem module chips; kinetic headline and URL callout; status indicator.\n- Audio: rapid tactile keystrokes, crisp tactile button click, premium final shimmer.\n\nCTA: edvano.xyz (free project-architecture audit)\n\nBanned: none supplied.\n\nNotes (documented deviations — flagged, not silently ignored):\n- Bundle id: \"edvano_os_launch_16x9\" is used exactly as the client specified; it intentionally omits the rules/05 §3 `project_<YYYY>_<MM>_<DD>_<slug>` prefix.\n- Theme: this brief explicitly forces the EDVANO LIGHT theme (themeMode \"light\"), overriding the engine default.\n- Duration/aspect: 900 frames (30s) at 16:9 (1920x1080), carried in content.meta and styleguide.dimensions.\n- motionPresets conflict: the brief's named presets (snappy3d 12/220, liquidFlow 18/140, elasticPunch 10/260) fall partly outside the stability envelope (springs must be stiffness 180-240, damping 14-18 per `.kilorules` §2). The named presets are preserved verbatim for fidelity, while the engine presets (entranceBounce/smoothSettle/snappyAccent) are clamped into the compliant envelope: entranceBounce 14/220, smoothSettle 18/180, snappyAccent 14/240. Flagged, not silently ignored.\n- scene.type values (chaos_explosion_3d, monolith_assembly_3d, engine_speed_3d, founder_freedom_3d, keynote_outro_3d) are descriptive acts, not engine-registered renderer keys; the scene router falls back to a bundle-driven act until dedicated acts exist.\n- Audio: no bundle-local SFX/music assets are supplied, so music.src = null and every scene sfx list is empty; no reference can fail to resolve. The renderer binds the shared royalty-free SFX + ambient library at render time (rules/03 §0/§0.1).\n- The brief's custom styleguide schema is preserved verbatim AND emitted alongside the engine-authoritative keys (brand, themeMode, colors, fonts, motion, threePreset, music, palette, motionPresets).\n- Copy is taken verbatim from the brief (Russian); no facts, prices or claims were invented.\n",
+    "files": [
+      "sources/logo.svg"
+    ]
+  },
+  "edvano_vercel_launch_16x9": {
+    "styleguide": {
+      "brand": "Edvano Digital Architecture",
+      "themeMode": "light",
+      "colors": {
+        "primary": "#4F46E5",
+        "accent": "#10B981",
+        "background": "#F8FAFC",
+        "text": "#0F172A",
+        "muted": "#64748B"
+      },
+      "fonts": {
+        "heading": "Inter, sans-serif",
+        "body": "Inter, sans-serif"
+      },
+      "motion": {
+        "speed": "fast",
+        "transition": "fade"
+      },
+      "threePreset": "mixed",
+      "music": {
+        "src": null,
+        "volume": 0.3
+      },
+      "palette": {
+        "background": "#F8FAFC",
+        "card": "#FFFFFF",
+        "cardBorder": "#E2E8F0",
+        "primary": "#4F46E5",
+        "cyanGlow": "#6366F1",
+        "accent": "#10B981",
+        "crimson": "#F43F5E",
+        "textLight": "#0F172A",
+        "textMuted": "#64748B"
+      },
+      "motionPresets": {
+        "entranceBounce": {
+          "damping": 14,
+          "stiffness": 210
+        },
+        "smoothSettle": {
+          "damping": 17,
+          "stiffness": 190
+        },
+        "snappyAccent": {
+          "damping": 15,
+          "stiffness": 240
+        },
+        "snappy3d": {
+          "damping": 14,
+          "stiffness": 210
+        },
+        "liquidFlow": {
+          "damping": 17,
+          "stiffness": 190
+        },
+        "elasticPunch": {
+          "damping": 15,
+          "stiffness": 240
+        }
+      },
+      "aspectRatio": "16:9",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fps": 30,
+      "durationInFrames": 900,
+      "features": {
+        "enable3dPerspective": true,
+        "enableParallaxDepth": true,
+        "disableTextGlints": true
+      }
+    },
+    "content": {
+      "meta": {
+        "title": "Edvano Digital Architecture — Launch (16:9 Dark)",
+        "fps": 30,
+        "width": 1920,
+        "height": 1080
+      },
+      "scenes": [
+        {
+          "id": "chaos_flash_3d",
+          "type": "chaos_flash_3d",
+          "durationInFrames": 120,
+          "headline": "Хаос из 5 фрилансеров?",
+          "body": "Дизайнер • Копирайтер • Таргетолог • Разраб • CRM-щик",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "ecosystem_morph_3d",
+          "type": "ecosystem_morph_3d",
+          "durationInFrames": 210,
+          "headline": "ОДНА СДЕЛКА ВМЕСТО ПЯТИ ФРИЛАНСЕРОВ",
+          "body": "Единая цифровая экосистема под ключ",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "engine_showcase",
+          "type": "engine_showcase",
+          "durationInFrames": 240,
+          "headline": "Архитектура • Лид-воронки • CRM",
+          "body": "Безупречно. Автоматизировано.",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "founder_freedom",
+          "type": "founder_freedom",
+          "durationInFrames": 150,
+          "headline": "Ваш фокус — продукт. Наш — продажи.",
+          "body": "Систему продаж берем на себя",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "cta_3d_launch",
+          "type": "cta_3d_launch",
+          "durationInFrames": 180,
+          "headline": "АУДИТ АРХИТЕКТУРЫ ПРОЕКТА",
+          "body": "Пора строить системный бизнес",
+          "media": "sources/logo.svg",
+          "sfx": [],
+          "transitionOut": "fade"
+        }
+      ],
+      "cta": "edvano.xyz",
+      "url": "edvano.xyz",
+      "voiceover": null
+    },
+    "prompt": "Title: Edvano Digital Architecture — Vercel-level Product Launch (16:9, Light)\n\nGoal: A cinema-grade, ultra-high-energy 30-second light-theme product-launch commercial that dramatizes the pain of juggling five freelancers, resolves it into one unified digital sales ecosystem, and converts with a free project-architecture audit CTA.\n\nTone: Clean, high-end Edvano Light SaaS at Apple/Vercel keynote level — precise, premium, confident, high-tech. Bright airy surfaces, crisp white cards on a soft slate canvas, calm indigo + emerald accents, generous whitespace.\n\nEnergy: punchy / ultra-high -> motion.speed fast\n\nAspect / format: 16:9 (1920x1080), 30 FPS, 30 seconds = 900 frames.\n\nCopy language: Russian (verbatim from the client brief; do not translate).\n\nTheme: EDVANO LIGHT (explicitly forced light in this brief — override the dark default).\n\nVisual style (palette tokens):\n- Background #F8FAFC (soft slate-white canvas), UI cards #FFFFFF with subtle borders #E2E8F0 and soft crisp drop-shadows.\n- Primary indigo #4F46E5 (hero accents + node paths), accent emerald #10B981 (metric callouts / success), alert rose #F43F5E (overdue markers).\n- Text #0F172A (high-contrast slate), muted #64748B.\n- Clean frosted white surfaces, soft layered shadows, subtle indigo glow accents, generous negative space.\n\nMotion style (prompt-driven 3D — activated by this brief per rules/01 §17):\n- Prompt-driven 3D perspective: perspective ~1200px, tilt transforms (rotateX up to 25deg) and z-depth parallax (translateZ -150px to -300px -> 0), driven by clean springs.\n- ABSOLUTE MOTION STABILITY: rock-solid. No noise offsets, no micro-jitter, no frame-by-frame wiggle on cards, text, or camera. Motion is clamped linear transfers or springs (stiffness 180-240, damping 14-18); continuous ambient movement is smooth sine/pulse only.\n- 15-frame micro-motion mandate: no static frame; every layer sustains smooth micro-activity on a ~12-15 frame cadence.\n- Liquid morphing transitions: nodes/containers morph and merge across beats; no hard cuts and no plain crossfades (rules/01 §8/§14/§16).\n- Staggered motor typography: headlines enter word-by-word on a 2-3 frame stagger (scale 1.25 -> 1.0); text stays crisp and solid — no glints/sweeps across glyphs.\n- Rich density: every scene composes 6-10 active layers (kinetic text + primary UI card + supporting floating chips, node paths, status dots and live progress fills) without cluttering the focal content.\n\nAudio vibe (clean cyber UI sound design):\n- Soft tactile clicks on UI interactions; smooth whoosh passes on the 3D transitions; subtle rising chimes on success reveals; a single damped impact accent on the Scene-1 blackout (no sustained rumble).\n- No bundle-local audio assets are supplied, so music.src = null and every scene sfx list is empty; the renderer binds the shared royalty-free SFX + ambient library at render time (rules/03 §0/§0.1), so no reference can fail to resolve.\n\nMust-have beats (16:9, 30 FPS):\n- Scene 1 CHAOS FLASH (frames 0-120): \"Хаос из 5 фрилансеров?\" / \"Дизайнер • Копирайтер • Таргетолог • Разраб • CRM-щик\" — five floating freelancer cards tilting in 3D with rose alert badges, surrounded by floating warning chips (\"Overdue -2d\", \"Bug #42\", \"Unanswered\", \"Deadline Missed\") over a subtle frosted glass background panel. Ends on a clean blackout at frame 110.\n- Scene 2 ECOSYSTEM CONVERGENCE (frames 120-330): \"ОДНА СДЕЛКА ВМЕСТО ПЯТИ ФРИЛАНСЕРОВ\" / \"Единая цифровая экосистема под ключ\" — a crystalline node structure with glowing dotted connection arcs and traveling pulse light-dots linking Next.js 16 -> Meta CAPI -> Lead Funnel -> CRM, plus live latency chips (\"12ms\", \"99.9% uptime\"); the camera dollies through Z.\n- Scene 3 REVENUE ENGINE (frames 330-570): \"Архитектура • Лид-воронки • CRM\" / \"Безупречно. Автоматизировано.\" — PageSpeed gauge sweeping to 100/100 in emerald, surrounded by floating performance chips (LCP 0.4s, CLS 0.00, TTFB 0.1s), live lead-counter pills, a pulsing background node network, and a floating push card \"Новая оплаченная заявка: $1,500\".\n- Scene 4 FOUNDER FREEDOM (frames 570-720): \"Ваш фокус — продукт. Наш — продажи.\" / \"Систему продаж берем на себя\" — a floating white macro dashboard streaming incoming deals (+1, +1, +1) with progress rings and smooth continuous 3D tilt, ringed by ambient floating badges (\"Автопилот\", \"Конверсия +34%\", \"24/7 Лиды\", \"Telegram Sync\").\n- Scene 5 CULMINATION & CTA (frames 720-900): \"АУДИТ АРХИТЕКТУРЫ ПРОЕКТА\" / \"Пора строить системный бизнес\" — a 3D zoom into a clean white booking modal, an animated cursor autofills and presses the button then slides offscreen, and the EDVANO logo badge (sources/logo.svg, upright) hero-reveals on a white badge with an indigo light-aura and a glowing CTA button, surrounded by floating Edvano module chips.\n\nCTA: edvano.xyz (free project-architecture audit)\n\nBanned: none supplied.\n\nBackground enrichment (rules/01 §18): supporting ambient layers — floating metric chips, subtle grid pulses, drifting particles, connection arcs and status dots — enrich the composition without cluttering the primary kinetic text and focal UI cards.\n\nNotes (documented deviations — flagged, not silently ignored):\n- Bundle id: \"edvano_vercel_launch_16x9\" is used exactly as the client specified; it intentionally omits the rules/05 §3 `project_<YYYY>_<MM>_<DD>_<slug>` prefix.\n- Theme: this brief explicitly forces the EDVANO LIGHT theme (background #F8FAFC, white cards, indigo #4F46E5, emerald #10B981, text #0F172A), overriding the engine's default-theme heuristic.\n- Duration/aspect: the brief mandates 900 frames (30s) at 16:9 (1920x1080), carried in content.meta (fps 30, width 1920, height 1080) and styleguide.dimensions.\n- scene.type values are descriptive acts, not engine-registered renderer keys; the scene router falls back to a bundle-driven act until dedicated acts exist.\n- The brief's custom styleguide schema is preserved verbatim AND emitted alongside the engine-authoritative keys. Engine motionPresets mapping: entranceBounce = snappy3d (14/210), smoothSettle = liquidFlow (17/190), snappyAccent = elasticPunch (15/240).\n- Duplicate/orphan assets: sources/ contains logo.jpg and fulllogo.jpg (unused orphans); the referenced asset is sources/logo.svg.\n- Copy is taken verbatim from the brief (Russian); the \"$1,500\" notification and the +1/+1/+1 deal counter come directly from the brief — no facts, prices or claims were invented.\n",
+    "files": [
+      "sources/fulllogo.jpg",
+      "sources/logo.jpg",
+      "sources/logo.svg"
+    ]
+  },
   "firstcreo2026_12_10": {
     "styleguide": {
       "brand": "Edvano",

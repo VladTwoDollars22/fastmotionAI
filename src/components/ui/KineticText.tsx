@@ -1,4 +1,3 @@
-import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import {
   getRemotionEnvironment,
@@ -80,12 +79,19 @@ export const KineticText: FC<KineticTextProps> = ({
         // Motion blur is a per-glyph CSS filter (expensive); keep it for the final
         // render only and use opacity/transform for the preview tier.
         const blur = isRendering ? motionBlur * Math.max(0, 1 - progress) : 0;
+        // Smooth ambient micro-motion (deterministic sine, never noise) so text
+        // stays rock-solid and jitter-free (`rules/roles/02` §3.6).
+        let ambientSeed = 0;
+        for (let c = 0; c < seed.length; c++) {
+          ambientSeed = (ambientSeed * 31 + seed.charCodeAt(c)) >>> 0;
+        }
+        const ambientPhase = (ambientSeed % 1000) / 1000 + index * 0.35;
         const ambientScale =
-          1 + ambient * noise2D(`${seed}-s${index}`, frame * 0.07, index);
+          1 + ambient * Math.sin(frame * 0.045 + ambientPhase * Math.PI * 2);
         const ambientY =
-          ambient * 10 * noise2D(`${seed}-y${index}`, frame * 0.05, index * 1.7);
+          ambient * 10 * Math.sin(frame * 0.05 + ambientPhase * Math.PI * 2);
         const ambientRot =
-          ambient * 45 * noise2D(`${seed}-r${index}`, frame * 0.04, index * 2.3);
+          ambient * 42 * Math.sin(frame * 0.04 + ambientPhase * Math.PI * 2 * 1.3);
 
         const baseScale =
           entry === "pop"
