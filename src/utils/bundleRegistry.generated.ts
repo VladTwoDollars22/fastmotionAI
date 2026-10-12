@@ -3,6 +3,122 @@
 import type { RawBundle } from "./projectLoader";
 
 export const BUNDLE_REGISTRY: Record<string, RawBundle> = {
+  "firstcreo2026_12_10": {
+    "styleguide": {
+      "brand": "Edvano",
+      "themeMode": "light",
+      "aspect": "16:9",
+      "colors": {
+        "primary": "#4F46E5",
+        "accent": "#10B981",
+        "background": "#F8FAFC",
+        "text": "#0F172A",
+        "muted": "#64748B"
+      },
+      "fonts": {
+        "heading": "Inter, sans-serif",
+        "body": "Inter, sans-serif"
+      },
+      "motion": {
+        "speed": "fast",
+        "transition": "fade"
+      },
+      "threePreset": "mixed",
+      "music": {
+        "src": null,
+        "volume": 0.3
+      },
+      "aspectRatio": "16:9",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fps": 30,
+      "durationInFrames": 900,
+      "palette": {
+        "background": "#F8FAFC",
+        "card": "#FFFFFF",
+        "primary": "#4F46E5",
+        "secondary": "#0F172A",
+        "accent": "#10B981",
+        "crimson": "#EF4444",
+        "textDark": "#0F172A",
+        "textMuted": "#64748B",
+        "border": "#E2E8F0"
+      },
+      "motionPresets": {
+        "entranceBounce": {
+          "damping": 14,
+          "stiffness": 180
+        },
+        "snappyAccent": {
+          "damping": 10,
+          "stiffness": 220
+        },
+        "smoothSettle": {
+          "damping": 25,
+          "stiffness": 120
+        }
+      }
+    },
+    "content": {
+      "meta": {
+        "title": "FirstCreo x Edvano — 1 Deal Instead of 5 Freelancers",
+        "fps": 30,
+        "width": 1920,
+        "height": 1080
+      },
+      "scenes": [
+        {
+          "id": "chaos_hook",
+          "type": "chaos_hook",
+          "durationInFrames": 150,
+          "headline": "Устал управлять 5 фрилансерами?",
+          "body": "Дизайнер • Копирайтер • Таргетолог • Разраб • CRM-щик",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "ecosystem_showcase",
+          "type": "ecosystem_showcase",
+          "durationInFrames": 240,
+          "headline": "1 сделка вместо 5 фрилансеров",
+          "body": "Сайт • Маркетинг • CRM • Лид-воронки",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "liquid"
+        },
+        {
+          "id": "founder_value",
+          "type": "founder_value",
+          "durationInFrames": 270,
+          "headline": "Вы занимаетесь продуктом. Мы — продажами.",
+          "body": "Готовая система продаж под ключ. Развивайте продукт и делитесь знаниями.",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "cta_resolution",
+          "type": "cta_resolution",
+          "durationInFrames": 240,
+          "headline": "Разберём вашу архитектуру за 15 мин",
+          "body": "Переходите на edvano.xyz и забирайте бесплатный аудит!",
+          "media": "sources/logo.jpg",
+          "sfx": [],
+          "transitionOut": "fade"
+        }
+      ],
+      "cta": "edvano.xyz",
+      "url": "edvano.xyz",
+      "voiceover": null
+    },
+    "prompt": "Title: FirstCreo x Edvano — \"1 Deal Instead of 5 Freelancers\" (16:9 SaaS commercial)\n\nGoal: An ultra-high-energy, 30-second light-mode SaaS commercial for the Edvano web agency that opens on freelancer chaos, collapses it into one unified growth ecosystem, shows the founder's freedom, and converts with a 15-minute architecture-audit CTA.\n\nConcept: \"1 Deal Instead of 5 Freelancers\" — one agency replaces a scattered freelancer stack (designer, copywriter, targetologist, developer, CRM admin).\n\nTone: clean, confident, high-tech, premium; snappy liquid spring motion, crisp UI interactions, generous whitespace, subtle glass and light-sweep accents. Warm, modern, trustworthy.\n\nEnergy: punchy -> motion.speed fast. Zero constant noise/shake; all motion is intentional and spring-driven.\n\nAspect / format: 16:9 (1920x1080) commercial; 30 seconds @ 30 FPS = 900 frames.\n\nCopy language: Russian (verbatim from the brief; do not translate).\n\nVisual style: modern light SaaS theme matching edvano.xyz UI — background #F8FAFC, clean rounded white cards (#FFFFFF), rich indigo primary #4F46E5, emerald green accents #10B981, dark slate text #0F172A, muted slate #64748B, light borders #E2E8F0.\n\nMotion style: snappy liquid spring transitions, no continuous camera shake or noise drift, high-tactile UI interactions (presses, toggles, cursor), and soft synced SFX on every beat.\n\nMust-have beats:\n- Scene 1 CHAOS (frames 0-150): \"Устал управлять 5 фрилансерами?\" — rapid glitch UI montage; five conflicting Telegram chat avatars (\"Дизайнер\", \"Копирайтер\", \"Таргетолог\", \"Разраб\", \"CRM-щик\") popping overdue notifications and conflicting deadlines in crimson warning badges (#EF4444), then swiping away in a smooth liquid transition.\n- Scene 2 ECOSYSTEM (frames 150-390): \"1 сделка вместо 5 фрилансеров\" — chaos collapses into one unified futuristic Edvano interface; interconnected nodes (Next.js 16 Web -> Meta Pixel & CAPI -> Lead Funnel -> CRM Deal Card) with emerald green highlights (#10B981) and live deal notifications.\n- Scene 3 FOUNDER VALUE (frames 390-660): \"Вы занимаетесь продуктом. Мы — продажами.\" — floating glassmorphism card with live incoming leads ticking up automatically (+1 deal, +1 lead), animated progress meters and clean UI badges.\n- Scene 4 OFFER & CTA (frames 660-900): \"Разберём вашу архитектуру за 15 мин\" — interactive 15-minute architecture audit booking modal with an animated cursor typing and clicking \"Записаться\", then a hero reveal of the EDVANO logo badge with a light-sweep gradient and a glowing primary button. URL: edvano.xyz.\n\nCTA: Переходите на edvano.xyz и забирайте бесплатный аудит! (URL: edvano.xyz)\n\nAssets: hero logo mark present at sources/logo.jpg (Edvano \"ed\" mark, indigo on white) — used verbatim; do not redraw or restyle. NOTE: the brief requested sources/logo.svg, but the only asset present is sources/logo.jpg, so the content.json media points at the existing file to keep the bundle resolvable.\n\nBanned: none supplied.\n\nNotes (documented deviations, producer-authoritative brief vs engine defaults):\n- Duration: brief mandates 900 frames (30s). The default composition duration is 300 frames; this bundle declares 900 per the explicit brief (documented deviation, rules/05 section 6.5 escape clause).\n- Aspect: brief mandates 16:9 (1920x1080). Engine defaults the canvas to 9:16 (1080x1920); this bundle carries the 16:9 intent in styleguide.dimensions/meta and flags the conflict (canvas size is engine-controlled, not bundle-controlled).\n- Audio: SFX are wired from the shared library (public/assets/audio/sfx/); every scene sfx list is empty here so no bundle-local reference can fail to resolve. No music asset is supplied (music.src = null).\n",
+    "files": [
+      "sources/logo.jpg"
+    ]
+  },
   "project_2026_10_12_freelance_chaos_to_order": {
     "styleguide": {
       "brand": "Chaos to Order",
