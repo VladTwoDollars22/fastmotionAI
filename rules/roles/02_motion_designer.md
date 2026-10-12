@@ -73,8 +73,8 @@ Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while s
   royalty-free, license-clear clean UI SFX/music (`.mp3` / `.wav`).
 - **Mandatory reusable library + naming.** ALL downloaded or generated sound assets
   MUST go in `public/assets/audio/sfx/` or `public/assets/audio/music/` using
-  standardized `base_variant` names (`whoosh_fast.mp3`, `click_tactile.mp3`,
-  `glitch_impact.mp3`, `ticker_counter.mp3`, `chime_success.mp3`), and MUST be
+  standardized `base_variant` names (`click_soft_light.mp3`, `whoosh_air_fast.mp3`,
+  `type_single_keystroke.mp3`, `counter_tick_soft.mp3`, `chime_success_warm.mp3`), and MUST be
   registered in `src/utils/audioLibrary.ts` (`SFX_LIBRARY` / `MUSIC_LIBRARY`).
   Play them through `sfxSrc(id)` / `musicSrc(id)` and the `<PlaySfx>` /
   `<PlaySfxTrack>` / `<PlayMusic>` helpers — never a hardcoded path.

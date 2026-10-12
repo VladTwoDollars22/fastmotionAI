@@ -39,8 +39,9 @@ whenever a bundle needs them.
   - SFX → `public/assets/audio/sfx/`
   - Music → `public/assets/audio/music/`
 - **Standardized naming.** `<base>_<variant>.<ext>` in lowercase snake_case, e.g.
-  `whoosh_fast.mp3`, `click_tactile.mp3`, `glitch_impact.mp3`, `ticker_counter.mp3`,
-  `chime_success.mp3`. Validate with `isStandardAudioName()` (see §0.1 registry).
+  `click_soft_light.mp3`, `whoosh_air_fast.mp3`, `type_single_keystroke.mp3`,
+  `counter_tick_soft.mp3`, `chime_success_warm.mp3`. Validate with
+  `isStandardAudioName()` (see §0.1 registry).
 - **Registry.** Every asset is registered by a stable id in
   `src/utils/audioLibrary.ts` (`SFX_LIBRARY` / `MUSIC_LIBRARY`); scenes reference it
   through `sfxSrc(id)` / `musicSrc(id)` and the `<PlaySfx>` / `<PlaySfxTrack>` /
