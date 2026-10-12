@@ -139,6 +139,120 @@ export const BUNDLE_REGISTRY: Record<string, RawBundle> = {
       "sources/audio/sfx/whoosh.wav"
     ]
   },
+  "project_edvano_promo_16x9": {
+    "styleguide": {
+      "brand": "Edvano",
+      "themeMode": "light",
+      "aspect": "16:9",
+      "colors": {
+        "primary": "#4F46E5",
+        "accent": "#10B981",
+        "background": "#F8FAFC",
+        "text": "#0F172A",
+        "muted": "#64748B"
+      },
+      "fonts": {
+        "heading": "Inter, sans-serif",
+        "body": "Inter, sans-serif"
+      },
+      "motion": {
+        "speed": "fast",
+        "transition": "fade"
+      },
+      "threePreset": "mixed",
+      "music": {
+        "src": null,
+        "volume": 0.3
+      },
+      "motionPresets": {
+        "entranceBounce": {
+          "damping": 14,
+          "stiffness": 180
+        },
+        "snappyAccent": {
+          "damping": 10,
+          "stiffness": 220
+        },
+        "smoothSettle": {
+          "damping": 25,
+          "stiffness": 120
+        }
+      },
+      "aspectRatio": "16:9",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fps": 30,
+      "durationInFrames": 750,
+      "palette": {
+        "background": "#F8FAFC",
+        "card": "#FFFFFF",
+        "primary": "#4F46E5",
+        "secondary": "#1E293B",
+        "accent": "#10B981",
+        "crimson": "#EF4444",
+        "textDark": "#0F172A",
+        "textMuted": "#64748B"
+      }
+    },
+    "content": {
+      "meta": {
+        "title": "Edvano — Ultra-fast Next.js 16 Promo",
+        "fps": 30,
+        "width": 1920,
+        "height": 1080
+      },
+      "scenes": [
+        {
+          "id": "hook",
+          "type": "problem_hook",
+          "durationInFrames": 120,
+          "headline": "Ваш сайт теряет клиентов за 3 секунды?",
+          "body": "Большинство сайтов грузятся слишком долго и выглядят устаревшими.",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "feature_showcase",
+          "type": "feature_showcase",
+          "durationInFrames": 240,
+          "headline": "Next.js 16 • Скорость < 1 сек • Мультиязычность",
+          "body": "В студии Edvano мы верстаем сайты на Next.js 16. Мгновенная загрузка, идеальная адаптивность и встроенная аналитика.",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "offer_modal",
+          "type": "offer_modal",
+          "durationInFrames": 210,
+          "headline": "Бесплатный 15-мин аудит",
+          "body": "Не знаете, почему сайт не продаёт? Запишитесь на аудит — найдём все слабые места.",
+          "media": null,
+          "sfx": [],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "cta_resolution",
+          "type": "cta_resolution",
+          "durationInFrames": 180,
+          "headline": "EDVANO",
+          "body": "Переходите на edvano.xyz и бронируйте слот прямо сейчас!",
+          "media": "sources/logo.svg",
+          "sfx": [],
+          "transitionOut": "fade"
+        }
+      ],
+      "cta": "edvano.xyz",
+      "voiceover": null
+    },
+    "prompt": "Title: Edvano — Ultra-fast Next.js 16 Promo (16:9)\nGoal: A sleek, light-themed, ultra-fast SaaS promo for the Edvano web agency that proves raw speed and craftsmanship, then converts with a free-audit CTA.\nTone: clean, confident, high-tech, premium; crisp UI motion, snappy easing with light overshoot, generous whitespace, subtle glass and light-sweep accents.\nEnergy: punchy -> motion.speed fast\nAspect / format: 16:9 (1920x1080) commercial; 25 seconds @ 30 FPS = 750 frames.\n\nCopy language: Russian (verbatim from the brief; do not translate).\n\nMust-have beats:\n- Scene 1 HOOK (frames 0-120): \"Ваш сайт теряет клиентов за 3 секунды?\" — a laggy UI spinner drags, then snaps to a sharp red (crimson) warning indicator and swipes away under a light UI.\n- Scene 2 SOLUTION / TECH STACK (frames 120-360): \"Next.js 16 • Скорость < 1 сек • Мультиязычность\" — Next.js 16 instant page loads, an animated PageSpeed gauge ticking up to 99/100 in emerald green, instant language toggle pills (RU / EN / UK), and interactive UI code snippets.\n- Scene 3 FREE AUDIT OFFER (frames 360-570): \"Бесплатный 15-мин аудит\" — a light-mode modal window with an animated cursor autofilling fields and clicking \"Записаться\".\n- Scene 4 CTA (frames 570-750): \"EDVANO\" — glowing brand badge, sleek primary indigo button reveal with light-sweep effects, logo mark (sources/logo.svg).\n\nCTA: Переходите на edvano.xyz и бронируйте слот прямо сейчас! (URL: edvano.xyz)\n\nBanned: none supplied.\n\nNotes (documented deviations, producer-authoritative brief vs engine defaults):\n- Duration: brief mandates 750 frames (25s). The default composition duration is 300 frames; this bundle intentionally declares 750 per the explicit brief (documented deviation, rules/05 section 6.5 escape clause). The current MainVideo composition is still fixed at 300 frames, so only the first two scenes render until the engine duration is made bundle-dynamic.\n- Aspect: brief mandates 16:9 (1920x1080). rules/01/04/05 default the canvas to 9:16 (1080x1920); this bundle carries the 16:9 intent in styleguide.dimensions/meta and flags the conflict (canvas size is engine-controlled, not bundle-controlled).\n- scene.type values (problem_hook, feature_showcase, offer_modal, cta_resolution) are descriptive roles, not engine-registered types; the scene router falls back to the generic bundle-driven act until dedicated acts exist.\n- styleguide.json is emitted with the engine-authoritative keys (brand, themeMode, colors, fonts, motion, threePreset, music) AND the brief's flat `palette`/`dimensions`/`motionPresets` tokens, so tokens bind while the brief's schema is preserved.\n- No SFX/music assets are supplied in the brief; music.src = null and every scene sfx list is empty so no reference can fail to resolve.\n",
+    "files": [
+      "sources/logo.svg"
+    ]
+  },
   "_template": {
     "styleguide": {
       "brand": "Aurora",

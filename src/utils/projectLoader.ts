@@ -31,6 +31,8 @@ export interface StyleguidePalette {
   blobs: Record<string, string> | null;
   problem: Record<string, string> | null;
   resolution: Record<string, string> | null;
+  /** Flat string tokens declared directly on `palette` (e.g. `card`, `crimson`). */
+  tokens: Record<string, string> | null;
 }
 
 export interface MotionPreset {
@@ -266,6 +268,7 @@ export const normalizeStyleguide = (
         blobs: sanitizeStringRecord(rawPalette.blobs),
         problem: sanitizeStringRecord(rawPalette.problem),
         resolution: sanitizeStringRecord(rawPalette.resolution),
+        tokens: sanitizeStringRecord(rawPalette),
       }
     : null;
   const rawPresets = isObject(raw.motionPresets) ? raw.motionPresets : null;

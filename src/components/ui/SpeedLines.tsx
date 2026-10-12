@@ -1,5 +1,5 @@
 import { noise2D } from "@remotion/noise";
-import type { FC } from "react";
+import type { CSSProperties, FC } from "react";
 import { memo, useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 
@@ -14,6 +14,8 @@ export interface SpeedLinesProps {
   inner?: number;
   reach?: number;
   width?: number;
+  /** Blend mode of the line group; `screen` suits dark themes, `normal` light ones. */
+  blend?: CSSProperties["mixBlendMode"];
 }
 
 interface LineFactor {
@@ -33,6 +35,7 @@ const SpeedLinesImpl: FC<SpeedLinesProps> = ({
   inner = 90,
   reach = 540,
   width = 3,
+  blend = "screen",
 }) => {
   const frame = useCurrentFrame();
 
@@ -76,7 +79,7 @@ const SpeedLinesImpl: FC<SpeedLinesProps> = ({
     );
   }
 
-  return <g style={{ mixBlendMode: "screen" }}>{items}</g>;
+  return <g style={{ mixBlendMode: blend }}>{items}</g>;
 };
 
 export const SpeedLines = memo(SpeedLinesImpl);

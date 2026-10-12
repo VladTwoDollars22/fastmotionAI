@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { CSSProperties, FC } from "react";
 import { memo, useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 import { mulberry32 } from "../../utils/prng";
@@ -19,6 +19,8 @@ export interface ParticleBurstProps {
   size?: number;
   gravity?: number;
   ring?: boolean;
+  /** Blend mode of the burst group; `screen` suits dark themes, `normal` light ones. */
+  blend?: CSSProperties["mixBlendMode"];
 }
 
 interface Sample {
@@ -57,6 +59,7 @@ const ParticleBurstImpl: FC<ParticleBurstProps> = ({
   size = 4,
   gravity = 0,
   ring = false,
+  blend = "screen",
 }) => {
   const frame = useCurrentFrame();
   const samples = useMemo(() => buildSamples(count, seed), [count, seed]);
@@ -109,7 +112,7 @@ const ParticleBurstImpl: FC<ParticleBurstProps> = ({
   }
 
   return (
-    <g style={{ mixBlendMode: "screen" }}>
+    <g style={{ mixBlendMode: blend }}>
       {ring ? (
         <circle
           cx={x}
