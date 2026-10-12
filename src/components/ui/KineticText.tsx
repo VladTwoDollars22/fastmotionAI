@@ -27,13 +27,7 @@ export interface KineticTextProps {
   motionBlur?: number;
   ambient?: number;
   seed?: string;
-  /** Light-sweep highlight strength (0 disables). Defaults to a subtle sheen. */
-  sweep?: number;
-  /** Frames for one full sweep of the highlight. */
-  sweepPeriod?: number;
 }
-
-const SWEEP_PERIOD_DEFAULT = 54;
 
 const splitText = (text: string, mode: KineticMode): string[] =>
   mode === "letter" ? Array.from(text) : text.split(" ");
@@ -55,17 +49,11 @@ export const KineticText: FC<KineticTextProps> = ({
   motionBlur = 0,
   ambient = 0.02,
   seed = "kinetic",
-  sweep = 0.6,
-  sweepPeriod = SWEEP_PERIOD_DEFAULT,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const { isRendering } = getRemotionEnvironment();
   const units = splitText(text, mode);
-
-  const baseColor = typeof style?.color === "string" ? style.color : "#FFFFFF";
-  const sweepActive = sweep > 0 && baseColor.length > 0;
-  const highlight = `rgba(255,255,255,${Math.min(1, Math.max(0, sweep)).toFixed(3)})`;
 
   return (
     <div
@@ -99,11 +87,6 @@ export const KineticText: FC<KineticTextProps> = ({
         const ambientRot =
           ambient * 45 * noise2D(`${seed}-r${index}`, frame * 0.04, index * 2.3);
 
-        // A traveling highlight wave: each glyph is phase-shifted so the sheen
-        // reads left-to-right across the line (Rule 01 §9 light-sweep).
-        const sweepPhase = ((((frame - delay) / sweepPeriod + index * 0.06) % 1) + 1) % 1;
-        const sweepPos = 150 - sweepPhase * 300;
-
         const baseScale =
           entry === "pop"
             ? 0.55 + 0.45 * progress
@@ -114,19 +97,6 @@ export const KineticText: FC<KineticTextProps> = ({
           (entry === "up" ? (1 - progress) * distance : 0) + ambientY;
         const perUnitRotate =
           rotate * (1 - progress) * (index % 2 === 0 ? -1 : 1) + ambientRot;
-
-        // Plain string map avoids csstype's huge color-keyword unions (TS2590).
-        const sweepStyle: Record<string, string> = sweepActive
-          ? {
-              backgroundImage: `linear-gradient(100deg, ${baseColor} 0%, ${baseColor} 34%, ${highlight} 50%, ${baseColor} 66%, ${baseColor} 100%)`,
-              backgroundSize: "220% 100%",
-              backgroundPosition: `${sweepPos}% 0`,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              color: "transparent",
-            }
-          : {};
 
         const motionStyle: CSSProperties = {
           display: "inline-block",
@@ -142,7 +112,6 @@ export const KineticText: FC<KineticTextProps> = ({
         const spanStyle = Object.assign(
           {} as CSSProperties,
           motionStyle,
-          sweepStyle,
           unitStyle,
         ) as CSSProperties;
 

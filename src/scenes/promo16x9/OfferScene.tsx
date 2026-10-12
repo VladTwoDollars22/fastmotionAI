@@ -179,8 +179,6 @@ export const OfferScene: FC<PromoSceneProps> = ({ beat, brief }) => {
         distance={54}
         motionBlur={8}
         ambient={0.01}
-        sweep={0.85}
-        sweepPeriod={46}
         seed="offer-headline"
         style={{
           position: "absolute",
@@ -203,7 +201,6 @@ export const OfferScene: FC<PromoSceneProps> = ({ beat, brief }) => {
         stiffness={springs.settle.stiffness}
         mass={springs.settle.mass}
         distance={22}
-        sweep={0}
         seed="offer-body"
         style={{
           position: "absolute",

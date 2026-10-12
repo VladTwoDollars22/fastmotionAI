@@ -181,8 +181,6 @@ export const ResolveScene: FC<FirstCreoSceneProps> = ({ beat, brief }) => {
         distance={54}
         motionBlur={8}
         ambient={0.01}
-        sweep={0.2}
-        sweepPeriod={44}
         seed="resolve-headline"
         style={{
           position: "absolute",
@@ -294,7 +292,7 @@ export const ResolveScene: FC<FirstCreoSceneProps> = ({ beat, brief }) => {
         fill={palette.secondary}
         outline="#FFFFFF"
         scale={1.15}
-        opacity={frame >= cursorAt - 2 ? 1 : 0}
+        opacity={(frame >= cursorAt - 2 ? 1 : 0) * (1 - smoothstep(revealStart - 4, revealStart + 10, frame))}
       />
 
       {/* Hero reveal: logo (verbatim) on a white badge with light-sweep. */}

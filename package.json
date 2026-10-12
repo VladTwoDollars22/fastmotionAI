@@ -45,6 +45,7 @@
     "assets": "node scripts/generate-sample-assets.mjs",
     "audio": "node scripts/generate-audio-library.mjs",
     "watch": "ts-node --project tsconfig.node.json scripts/watcher.ts",
+    "render:qa": "tsc --noEmit && ts-node --project tsconfig.node.json scripts/qa-check.ts && npx remotion render src/index.ts MainVideo output/firstcreo2026_12_10.mp4",
     "predev": "npm run bundles",
     "prebuild": "npm run bundles"
   },

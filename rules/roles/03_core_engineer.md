@@ -51,6 +51,13 @@ Designer**. If it requires a new/edited bundle, hand off to **Producer**.
    full quality while rendering), ban per-frame SVG/CSS filter storms, and require
    instancing/memoization for heavy scenes (rule 01 §15, rule 04 §1/§5/§6).
 7. Enforce the verification gate: `npm run lint` (`eslint src && tsc`) must be clean.
+8. **Maintain the shared SFX library & rotator.** Keep `src/utils/audioLibrary.ts` the
+   single registry for `public/assets/audio/sfx|music/` (all 30 SFX + the music bed mapped
+   by stable id) and the deterministic rotation API — `playRotatedSfx(category, …)`,
+   `rotatedSfxId`, `cyclicSfxId`, `createSfxRotator`, and the `SFX_MASTER_VOLUME = 0.25`
+   scale — so repeated cues never play the same asset more than twice in a row
+   (`rules/03` §5.1–§5.2). Rotation must stay pure/frame-driven (no timers or
+   `Math.random`).
 
 ---
 
@@ -70,5 +77,7 @@ Designer**. If it requires a new/edited bundle, hand off to **Producer**.
 - [ ] `npm run lint` (`eslint src && tsc`) is clean; `npx tsc --noEmit` passes.
 - [ ] Preview performance tier verified (smooth preview, no per-frame filter storms).
 - [ ] Loader/watcher/CLI changes are documented and deterministic.
+- [ ] Shared SFX library intact: every asset in `public/assets/audio/sfx/` is mapped in
+      `src/utils/audioLibrary.ts`, and the rotator API stays deterministic (§3.8).
 - [ ] No design/component files were touched outside this role's boundary locks.
 - [ ] Report the exact lint/tsc result.

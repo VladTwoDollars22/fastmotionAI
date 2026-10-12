@@ -50,8 +50,6 @@ export const FounderScene: FC<FirstCreoSceneProps> = ({ beat, brief }) => {
         distance={56}
         motionBlur={8}
         ambient={0.01}
-        sweep={0.2}
-        sweepPeriod={46}
         seed="founder-headline"
         style={{
           position: "absolute",

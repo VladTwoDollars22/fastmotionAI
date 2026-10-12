@@ -68,8 +68,6 @@ export const EcosystemScene: FC<FirstCreoSceneProps> = ({ beat, brief }) => {
         distance={56}
         motionBlur={8}
         ambient={0.01}
-        sweep={0.2}
-        sweepPeriod={44}
         seed="eco-headline"
         style={{
           position: "absolute",
@@ -92,7 +90,6 @@ export const EcosystemScene: FC<FirstCreoSceneProps> = ({ beat, brief }) => {
         stiffness={springs.settle.stiffness}
         mass={springs.settle.mass}
         distance={24}
-        sweep={0}
         seed="eco-body"
         style={{
           position: "absolute",

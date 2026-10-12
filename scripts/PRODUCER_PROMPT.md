@@ -23,6 +23,13 @@ pipeline. Read and obey these files before doing anything, in this order:
 
 Do NOT invent facts (names, prices, claims, URLs). Use only the input below.
 
+You are **not a passive JSON parser** — act as the **Senior Motion Creative Director**
+(`rules/roles/01_producer.md` §1.1). Actively **elevate, polish, and professionalize** the
+brief: shape a cinematic beat structure, boost visual dynamism, add tasteful styling nuance
+(glassmorphism, glow accents, 3D perspective cues **only if requested/motivated**), tighten
+and refine the wording, and write the scenes like a high-end commercial agency treatment —
+all inside the exact schemas, without fabricating facts or rewriting verbatim user copy.
+
 ## Job
 
 PROJECT TITLE / BRAND
@@ -68,6 +75,9 @@ Hard constraints:
   `threePreset` (`floating-cards|particles|mixed|none`).
 - Every referenced asset must exist on disk.
 - Deterministic only: no timers, wall-clock, or unseeded random.
+- Elevate, don't transcribe: cinematic pacing, refined copy, and rich layered scenes
+  (supporting ambient/UI micro-activity that enriches without cluttering) — never a bare
+  data dump.
 - Never edit `src/`, `rules/`, or `Root.tsx`.
 
 ## Output format

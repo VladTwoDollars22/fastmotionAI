@@ -123,8 +123,10 @@ Transitions MUST NOT be simple fades or slides. Use at least one of:
 - Text NEVER just fades in. Use:
   - staggered per-character/word spring overshoot `{ damping: 12, stiffness: 220 }`,
   - kinetic **scale-punch** on the whole line at its beat,
-  - **light-sweep**: a moving highlight gradient across the glyphs,
   - **motion-blur emulation**: `filter: blur(k * (1 - progress))` during fast motion.
+- **FORBIDDEN on text: moving gradient sweeps / light-glints across glyphs** (§17).
+  Text must be crisp and solid. Light-sweep is reserved for containers, badges and
+  buttons — never letters.
 - Type scales: headline `~96–200px`, subhead `~36–48px`, label `~26–34px`; keep within
   the 1080 safe area and wrap rather than overflow.
 - **Micro-interactions on every UI card/icon** (at least two):
@@ -161,6 +163,8 @@ Transitions MUST NOT be simple fades or slides. Use at least one of:
 - [ ] Camera shake is damped-spring + low-frequency, never raw jitter (§7, §14).
 - [ ] Every beat flows into the next via a morph/trace/dissolution (§14).
 - [ ] Preview stays smooth: no per-frame SVG/CSS filter storms; heavy math memoized (§15).
+- [ ] Rich layering: supporting ambient/UI objects + micro-animations beyond the brief (§18).
+- [ ] Non-intrusive harmony: secondary elements enrich without clutter; hierarchy preserved (§18).
 
 ---
 
@@ -249,3 +253,45 @@ Static holds are a defect. Every scene MUST feel alive for its entire duration:
 Scope note: a per-brief camera constraint (e.g. "impact-only shake on specific frames")
 overrides the ambient-camera reading of this rule, but the micro-interaction, punch,
 morph/slide, and stagger requirements still apply in full.
+
+## 17. Micro-motion, liquid morphing & motor typography (mandatory)
+
+- **15-frame micro-motion mandate.** No static screen holds. Every scene must sustain
+  continuous micro-activity (floating badges, progress fills, particle oscillation,
+  scale-pulses) on roughly a **12–15 frame (0.5s)** cadence for its whole duration.
+- **Liquid element morphing.** Prefer morphing/containment over plain slide-outs: an
+  element from Scene N should scale, reshape, or merge into a **container of Scene N+1**
+  (rule 01 §8/§16), so transitions read as continuous transformation.
+- **Staggered motor typography.** Headlines enter **word-by-word** with a **2–3 frame**
+  stagger, animating `scale: 1.25 → 1.0` and `opacity: 0 → 1` on snappy springs
+  (`damping: 12, stiffness: 220`). **FORBIDDEN:** moving gradient sweeps or light-glints
+  across text letters — text stays crisp and solid (§9).
+- **Prompt-driven 3D depth.** Fully support 3D perspective (`perspective`, `rotateX`,
+  `rotateY`, `translateZ`), but activate 3D physics **only when the prompt explicitly
+  requests it**. Default mode is ultra-sleek 2D spring mechanics.
+
+## 18. Rich layering & atmospheric micro-activity (mandatory)
+
+A scene is a **living environment**, not a slide with one object on it. Compositions must
+carry more supporting ambient/UI objects and micro-animations than the basic brief lists.
+
+- **Density mandate.** Beyond the hero/focal element, every scene SHOULD layer supporting
+  micro-content, e.g. floating metric chips, subtle grid pulses, particle drifts,
+  background connection rays, status dots, breathing gauges, orbiting satellites, ambient
+  scan lines, and idle progress ticks.
+- **Continuous micro-activity.** Secondary elements stay alive on the §17 ~12–15 frame
+  cadence (drift, pulse, flicker, count), never freezing while the hero performs.
+- **Non-intrusive harmony (the bound).** Secondary elements MUST enrich the composition and
+  feel, and **never** clutter the viewport or distract from the primary kinetic text and
+  focal UI cards. When in doubt, dial opacity/scale/amplitude down rather than adding more.
+- **Hierarchy discipline.** Keep a clear perceptual order — focal > supporting > ambient —
+  with supporting layers at lower contrast/opacity and smaller amplitude than the hero, and
+  ambient layers lowest. Density must never flatten the hierarchy.
+- **Legibility is inviolable.** Text and focal cards stay crisp and uncluttered inside the
+  safe area (rule 01 §1); ambient layers never cross or compete with a focal reading zone.
+- **Performance-aware.** Layering respects the frame budget (§15) and per-beat element
+  caps; add richness via cheap, memoized, frame-driven motion — not per-frame filter storms.
+
+Checklist additions (see §11):
+- [ ] Scene layers supporting ambient/UI objects + micro-animations beyond the brief.
+- [ ] Secondary elements enrich without clutter (non-intrusive harmony; clear hierarchy).

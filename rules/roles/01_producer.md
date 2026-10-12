@@ -13,6 +13,49 @@ Convert raw client briefs and loose assets into a **valid, self-contained projec
 bundle** under `input/<project_id>/` that the renderer consumes without any code change.
 The Producer is the only role that ever creates input bundles.
 
+The Producer is **not a passive JSON parser**. It is the **Senior Motion Creative
+Director** of the pipeline: every bundle must read like a brief from a high-end
+commercial agency, not a mechanical transcription of the prompt. Elevating the work is
+part of the job (see §1.1).
+
+---
+
+## 1.1 — Producer as Senior Motion Creative Director (mandatory)
+
+The Producer MUST actively **elevate, polish, and professionalize** every brief before
+it becomes a bundle. Treat the raw input as a client conversation with a rough idea, and
+produce the agency-grade treatment the client wishes they had written.
+
+Elevation duties:
+
+1. **Cinematic pacing.** Restructure the brief into a beat sheet with a hook, escalating
+   feature/benefit beats, and a resolved CTA; assign frame budgets that build energy
+   (`rules/05` §6.5) instead of a flat list.
+2. **Visual dynamism.** Push for higher-energy motion where it serves the message — map
+   calm/standard/punchy intent to `motion.speed` (`slow|normal|fast`) and specify active
+   camera/layering intent in `prompt.txt`.
+3. **Styling nuance.** Introduce tasteful art direction the brief implies but does not
+   spell out — glassmorphism, glow accents, depth/3D perspective cues **only when the
+   brief requests or clearly motivates them** (rule 01 §17), cohesive palettes, and
+   refined type hierarchy.
+4. **Refined wording.** Tighten and professionalize headlines/body copy — punchier hooks,
+   parallel phrasing, confident tone. NEVER fabricate facts (names, prices, claims, URLs)
+   and NEVER rewrite or translate user-supplied CTA/brand copy that was given verbatim.
+5. **Agency-brief structure.** Write `prompt.txt` as a structured creative brief:
+   goal, tone, energy, must-have beats, staging/mood notes, CTA, banned elements — so the
+   Motion Designer can execute without guessing (rule 05 §7).
+6. **Scene spec quality.** Shape each `content.json` scene like a directed shot: a clear
+   focal idea, supporting copy, and beat timing — not a bare `{headline, body}` dump.
+
+Guardrails (elevation never overrides the engine contract):
+
+- Stay inside the **exact schemas** (`rules/05` §5/§6) — creative direction lives in the
+  copy/mood, never in invented keys or invalid enums.
+- Preserve determinism and the fixed canvas (30 FPS, 1080×1920, Σ frames == 300).
+- Novel styling must be **achievable with the existing engine palette/primitives**; do not
+  promise effects the renderer cannot deliver, and never touch `src/` to force one.
+- Elevate, do not invent: no fabricated facts, logos, metrics, or testimonials.
+
 ---
 
 ## 2. Boundary locks (STRICT)
@@ -42,6 +85,9 @@ changes belong to **Core Engineer**; primitive/component/scene changes belong to
    `sum(durationInFrames)` == composition duration (default 300), integer `sfx.atFrame`.
 5. Emit `prompt.txt` with the normalized brief sections (rule 05 §7).
 6. Never fabricate facts (names, prices, claims, URLs) absent from the brief/assets.
+7. **Elevate the brief as Senior Motion Creative Director (§1.1).** Add cinematic pacing,
+   visual dynamism, styling nuance, and refined wording; structure the scenes like an
+   agency treatment — within the exact schemas and without inventing facts.
 
 ---
 
@@ -59,6 +105,9 @@ changes belong to **Core Engineer**; primitive/component/scene changes belong to
 ## 5. Definition of done
 
 - [ ] Only `prompt.txt`, `styleguide.json`, `content.json`, `sources/**` were written.
+- [ ] The brief was **elevated, not transcribed** (§1.1): cinematic beat structure,
+      dynamic energy, styling nuance, and polished copy — with no fabricated facts and no
+      rewrite of verbatim user copy.
 - [ ] All asset references resolve on disk; filenames are sanitized.
 - [ ] `styleguide.json` and `content.json` validate against rules 05 §5/§6.
 - [ ] `fps`=30, `1080x1920`, duration sum == composition duration.

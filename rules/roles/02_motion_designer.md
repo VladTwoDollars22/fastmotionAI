@@ -83,6 +83,14 @@ Refines `rules/03_audio_and_sfx.md` §0. Scene composition is not "done" while s
 - **Refined & soft.** SFX MUST be pleasant, soft, and balanced — high-frequency tactile
   clicks, warm UI pops, soft smooth whooshes, subtle chimes. Never harsh, brittle, or
   loud; keep peaks ≲ −6 dBFS with headroom (`rules/03` §5.1).
+- **No duplication.** NEVER play the exact same SFX asset (`.mp3`) more than **twice
+  sequentially** in a single video — rotate across the library (`rules/03` §5.2). Use the
+  `playRotatedSfx(category, options)` helper in `src/utils/audioLibrary.ts`, which cycles a
+  category's variations automatically (respecting the ≤2 rule) and applies the **0.25**
+  master volume scale; pass an explicit `index`, `history`, or a `useMemo`-built `rotator`
+  to keep the pick deterministic across frames.
+- **Balanced volume.** Default master volume for UI SFX is soft: **0.15–0.35** relative
+  to the audio tracks.
 
 ---
 
@@ -127,6 +135,47 @@ reading; the micro-interaction, punch, morph/slide, and stagger requirements sti
 
 ---
 
+## 3.4 — MICRO-MOTION, LIQUID MORPHING & MOTOR TYPOGRAPHY (mandatory)
+
+Refines `rules/01_motion_design.md` §17.
+
+- **15-FRAME MICRO-MOTION MANDATE.** No static screen holds. Every scene maintains
+  continuous micro-activity (floating badges, progress fills, particle oscillations,
+  scale-pulses) on a ~**12–15 frame (0.5s)** cadence for its entire duration.
+- **LIQUID ELEMENT MORPHING.** Prefer morphing/containment over simple slide-outs:
+  elements from Scene N smoothly scale, reshape, or merge into containers of Scene N+1.
+- **STAGGERED MOTOR TYPOGRAPHY.** Headlines enter **word-by-word** with **2–3 frame**
+  stagger offsets, animating `scale: 1.25 → 1.0` and `opacity: 0 → 1` on snappy springs.
+  **FORBIDDEN:** moving gradient sweeps or light-glints across text letters — text must be
+  crisp and solid (no `KineticText sweep > 0`; light-sweep is for containers/buttons only).
+- **PROMPT-DRIVEN 3D DEPTH.** Fully support 3D perspective (`perspective`, `rotateX`,
+  `rotateY`, `translateZ`), but enable 3D physics **only when the prompt explicitly
+  specifies it**. Default mode is ultra-sleek 2D spring mechanics.
+- **STRICT ASSET INTEGRITY.** Reaffirmed from §3.2: never modify, redraw, or replace
+  user-provided source images/logos (`.svg`); present them in clean rounded container
+  badges with drop-shadows, without altering the source file.
+
+---
+
+## 3.5 — RICH LAYERING & ATMOSPHERIC MICRO-ACTIVITY (mandatory)
+
+Refines `rules/01_motion_design.md` §18. A scene is a living environment, not a single
+object on a slide.
+
+- **Density.** Beyond the hero, layer supporting ambient/UI objects and micro-animations
+  (floating metric chips, subtle grid pulses, particle drifts, background connection rays,
+  status dots, breathing gauges) — more than the basic brief strictly lists.
+- **Micro-activity.** Secondary elements keep moving on the §3.4 ~12–15 frame cadence;
+  nothing freezes while the hero performs.
+- **Non-intrusive harmony.** Secondary elements MUST enrich the composition and never
+  clutter the viewport or distract from the primary kinetic text and focal UI cards. Keep a
+  clear focal > supporting > ambient hierarchy (lower contrast/opacity/amplitude as you go
+  back) and keep focal reading zones uncluttered inside the safe area.
+- **Performance-aware.** Add richness with cheap, memoized, frame-driven motion within the
+  per-beat element budget — never per-frame filter storms.
+
+---
+
 ## 4. Responsibilities
 
 1. Keep primitives frame-driven and deterministic: only `useCurrentFrame()` /
@@ -164,6 +213,9 @@ reading; the micro-interaction, punch, morph/slide, and stagger requirements sti
 13. **Keep every frame dynamic (§3.3).** Continuous micro-interactions, scale-punches,
     fluid morph/slide + layout reflow, parallax depth, and spring-staggered entries — no
     static holds (rule 01 §16).
+14. **Layer rich, non-intrusive atmosphere (§3.5).** Add supporting ambient/UI objects and
+    micro-animations beyond the brief so scenes feel dense and alive — while keeping a clear
+    hierarchy and never cluttering the focal text/cards (rule 01 §18).
 
 ---
 
@@ -187,6 +239,10 @@ reading; the micro-interaction, punch, morph/slide, and stagger requirements sti
       is never silent.
 - [ ] Any downloaded/generated audio lives in `public/assets/audio/sfx|music/` with a
       standardized `base_variant` name and is registered in `src/utils/audioLibrary.ts`.
+- [ ] Repeated SFX rotate via `playRotatedSfx(category, …)` — no asset plays more than
+      twice in a row, at the 0.25 master volume scale (§3.1, `rules/03` §5.2).
+- [ ] Rich layering present: supporting ambient/UI objects + micro-animations enrich the
+      scene without clutter, preserving focal > supporting > ambient hierarchy (§3.5, rule 01 §18).
 - [ ] Source assets rendered verbatim; any background/padding issue fixed by container
       styling only — no asset file was replaced, redrawn, or restyled (§3.2).
 - [ ] No static holds: continuous micro-interactions, scale-punches, fluid morph/slide +

@@ -6,7 +6,7 @@ import { KineticText } from "../../components/ui/KineticText";
 import { RadialGauge } from "../../components/ui/RadialGauge";
 import { SegmentedPills } from "../../components/ui/SegmentedPills";
 import { dampedImpulse, smoothstep } from "../../utils/kinetics";
-import { PlaySfx, PlaySfxTrack, type SfxCue } from "../../utils/audioLibrary";
+import { PlaySfx, PlaySfxTrack, buildRotatedSfxCues } from "../../utils/audioLibrary";
 import {
   lerpHsl,
   progressBetween,
@@ -128,8 +128,6 @@ export const SolutionScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           distance={60}
           motionBlur={8}
           ambient={0.01}
-          sweep={0.85}
-          sweepPeriod={44}
           seed="solution-headline"
           style={{
             color: palette.text,
@@ -151,7 +149,6 @@ export const SolutionScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           mass={springs.settle.mass}
           distance={26}
           ambient={0.006}
-          sweep={0}
           seed="solution-body"
           style={{
             marginTop: 26,
@@ -288,7 +285,7 @@ export const SolutionScene: FC<PromoSceneProps> = ({ beat, brief }) => {
         pitch={-1}
       />
       <PlaySfxTrack
-        cues={switches.map<SfxCue>((f) => ({ id: "click", frame: f, volume: 0.6, pitch: 4 }))}
+        cues={buildRotatedSfxCues("clicks", switches, { volume: 0.6, pitch: 4 })}
       />
       <PlaySfx id="chime" frame={tickEnd} volume={0.5} pitch={2} />
       <PlaySfx

@@ -324,8 +324,6 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           distance={70}
           motionBlur={8}
           ambient={0.012}
-          sweep={0.9}
-          sweepPeriod={46}
           seed="hook-headline"
           style={{
             color: palette.text,
@@ -358,7 +356,6 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
             mass={springs.settle.mass}
             distance={24}
             ambient={0.006}
-            sweep={0}
             seed="hook-body"
             style={{
               marginTop: 30,

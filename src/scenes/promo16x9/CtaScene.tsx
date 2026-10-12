@@ -32,7 +32,6 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
   const pop = dampedImpulse(frame - revealEnd, 20);
   const badgeIn = spring({ frame: frame - at(CTA_T.badge), fps, config: springs.entrance });
   const logoScale = 0.4 + 0.6 * revealEase + 0.06 * pop;
-  const logoRotate = (1 - revealEase) * -12;
   const glowPulse = 0.6 + 0.4 * Math.sin((frame / fps) * 2.2);
 
   const burstAt = at(CTA_T.burst);
@@ -69,7 +68,7 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
       >
         <div
           style={{
-            transform: `scale(${logoScale}) rotate(${logoRotate}deg)`,
+            transform: `scale(${logoScale})`,
             opacity: Math.min(1, badgeIn * (0.3 + revealEase)),
             display: "flex",
             alignItems: "center",
@@ -136,8 +135,6 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           rotate={8}
           motionBlur={9}
           ambient={0.012}
-          sweep={0.95}
-          sweepPeriod={42}
           seed="cta-headline"
           style={{
             color: palette.secondary,
@@ -157,7 +154,6 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           stiffness={springs.settle.stiffness}
           mass={springs.settle.mass}
           distance={22}
-          sweep={0}
           seed="cta-body"
           style={{ color: palette.muted, fontSize: 32, fontWeight: 500 }}
         />

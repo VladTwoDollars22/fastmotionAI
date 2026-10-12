@@ -5,6 +5,7 @@ import { KineticText } from "../../components/ui/KineticText";
 import {
   PlaySfx,
   PlaySfxTrack,
+  buildRotatedSfxCues,
   type SfxCue,
 } from "../../utils/audioLibrary";
 import { dampedImpulse, smoothstep } from "../../utils/kinetics";
@@ -52,11 +53,13 @@ export const ChaosScene: FC<PromoSceneProps> = ({ beat, brief }) => {
   const alarm = dampedImpulse(frame - burstFrame, 28);
   const burstPunch = dampedImpulse(frame - burstFrame, 14);
 
-  const popCues: SfxCue[] = roles.map((_, index) => ({
-    id: "pop_soft_notification",
-    frame: at(CHAOS_T.cards[index] ?? CHAOS_T.cards[0]),
-    volume: 0.6,
-  }));
+  // Rotate the pops across the category so the notification cascade never
+  // plays the same asset more than twice in a row (rules/03 §5.2).
+  const popCues: SfxCue[] = buildRotatedSfxCues(
+    "pops",
+    roles.map((_, index) => at(CHAOS_T.cards[index] ?? CHAOS_T.cards[0])),
+    { volume: 0.6 },
+  );
 
   return (
     <AbsoluteFill style={{ fontFamily }}>
@@ -79,8 +82,6 @@ export const ChaosScene: FC<PromoSceneProps> = ({ beat, brief }) => {
         distance={58}
         motionBlur={8}
         ambient={0.01}
-        sweep={0.2}
-        sweepPeriod={46}
         seed="chaos-headline"
         style={{
           position: "absolute",

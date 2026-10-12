@@ -132,6 +132,30 @@ export const sfxIdsByCategory = (category: SfxCategory): SfxId[] =>
 export const sfxByCategory = (category: SfxCategory): SfxAsset[] =>
   sfxIdsByCategory(category).map((id) => SFX_LIBRARY[id]);
 
+/** Cache of file-unique variation ids so rotation never re-allocates per frame. */
+const VARIATIONS: Partial<Record<SfxCategory, SfxId[]>> = {};
+
+/**
+ * Canonical, **file-unique** variation ids for a category. Legacy aliases that
+ * resolve to the same `.mp3` are collapsed (first occurrence wins), so rotation
+ * never treats two ids for one sound as distinct variations. Computed once per
+ * category and cached (safe: the library is static).
+ */
+export const sfxVariations = (category: SfxCategory): SfxId[] => {
+  const cached = VARIATIONS[category];
+  if (cached) return cached;
+  const seen = new Set<string>();
+  const out: SfxId[] = [];
+  for (const id of sfxIdsByCategory(category)) {
+    const file = SFX_LIBRARY[id].file;
+    if (seen.has(file)) continue;
+    seen.add(file);
+    out.push(id);
+  }
+  VARIATIONS[category] = out;
+  return out;
+};
+
 export const getSfx = (id: SfxId): SfxAsset => SFX_LIBRARY[id];
 
 /** Maps the mandatory event families to the library ids that satisfy them. */
@@ -257,6 +281,218 @@ export const PlaySfxTrack: FC<{ cues: SfxCue[] }> = ({ cues }) =>
       rate: cue.rate,
     }),
   );
+
+// ---------------------------------------------------------------------------
+// SFX rotation — soft, varied, deterministic (rules/03 §5.1–§5.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Default master volume scaling for rotated UI cues (rules/03 §5.2). Effective
+ * gain is `SFX_MASTER_VOLUME × cue volume × asset gain`, keeping the palette soft
+ * and seated under the music/narration bed.
+ */
+export const SFX_MASTER_VOLUME = 0.25;
+
+/** Hard cap on how many times one asset may play consecutively (rules/03 §5.2). */
+export const SFX_MAX_CONSECUTIVE = 2;
+
+const clamp01 = (value: number): number =>
+  Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+
+/** Resolve a play history of ids to their underlying asset files. */
+const historyFiles = (history: SfxId[]): string[] =>
+  history.map((id) => SFX_LIBRARY[id].file);
+
+/** Count trailing repeats of `file` at the end of `files` (most recent last). */
+const trailingRepeats = (files: string[], file: string): number => {
+  let count = 0;
+  for (let i = files.length - 1; i >= 0 && files[i] === file; i--) count++;
+  return count;
+};
+
+/** Index of the most recent occurrence of `file` in `files` (`-1` if absent). */
+const recencyOf = (files: string[], file: string): number => {
+  for (let i = files.length - 1; i >= 0; i--) if (files[i] === file) return i;
+  return -1;
+};
+
+/**
+ * Deterministic, history-aware rotation across one category's variations.
+ *
+ * - Compares at the **file** level, so aliases sharing one `.mp3` count as the
+ *   same sound.
+ * - Never returns a variation that would play a **third** time in a row
+ *   (`SFX_MAX_CONSECUTIVE`), satisfying rules/03 §5.2.
+ * - Prefers the least-recently-used variation, so a rotation cycles the whole
+ *   category before repeating (ties fall back to registry order).
+ *
+ * Pure: equal `(category, history)` ⇒ equal id — no timers, no `Math.random`.
+ */
+export const rotatedSfxId = (category: SfxCategory, history: SfxId[] = []): SfxId => {
+  const ids = sfxVariations(category);
+  if (ids.length === 0) {
+    throw new Error(`[audioLibrary] no SFX registered for category "${category}"`);
+  }
+  if (ids.length === 1) return ids[0];
+
+  const files = historyFiles(history);
+  const eligible = ids.filter(
+    (id) => trailingRepeats(files, SFX_LIBRARY[id].file) < SFX_MAX_CONSECUTIVE,
+  );
+  const pool = eligible.length > 0 ? eligible : ids;
+
+  let best = pool[0];
+  let bestRecency = recencyOf(files, SFX_LIBRARY[best].file);
+  for (let i = 1; i < pool.length; i++) {
+    const recency = recencyOf(files, SFX_LIBRARY[pool[i]].file);
+    if (recency < bestRecency) {
+      best = pool[i];
+      bestRecency = recency;
+    }
+  }
+  return best;
+};
+
+/** Plain cyclic pick: variation `index % variations` (wraps negative indices). */
+export const cyclicSfxId = (category: SfxCategory, index = 0): SfxId => {
+  const ids = sfxVariations(category);
+  if (ids.length === 0) {
+    throw new Error(`[audioLibrary] no SFX registered for category "${category}"`);
+  }
+  const i = ((Math.trunc(index) % ids.length) + ids.length) % ids.length;
+  return ids[i];
+};
+
+export interface SfxRotator {
+  /** Next varied id for `category`; advances the internal history. */
+  next(category: SfxCategory): SfxId;
+  /** Played ids, oldest → newest. */
+  readonly history: SfxId[];
+  /** Clear the history (e.g. between independent cue sheets). */
+  reset(): void;
+}
+
+/**
+ * Stateful rotator over `rotatedSfxId`. Deterministic **only when `next()` is
+ * called in a stable order** — build cue sheets inside a `useMemo` (never in
+ * per-frame code) so the rotation stays reproducible across renders.
+ */
+export const createSfxRotator = (): SfxRotator => {
+  const history: SfxId[] = [];
+  return {
+    get history(): SfxId[] {
+      return history;
+    },
+    next(category: SfxCategory): SfxId {
+      const id = rotatedSfxId(category, history);
+      history.push(id);
+      return id;
+    },
+    reset(): void {
+      history.length = 0;
+    },
+  };
+};
+
+export interface PlayRotatedSfxOptions {
+  /** Force a specific variation, bypassing rotation. */
+  id?: SfxId;
+  /** Recent-play history (oldest → newest) for exact rotation. */
+  history?: SfxId[];
+  /** Explicit cyclic occurrence index; overrides the frame-derived default. */
+  index?: number;
+  /** Frame within the parent sequence at which the cue fires (default 0). */
+  frame?: number;
+  /** Extra trigger frames when the same cue repeats. */
+  extraFrames?: number[];
+  /** Per-cue volume multiplier (0..1); scaled by `SFX_MASTER_VOLUME`. */
+  volume?: number;
+  /** Pitch modulation in semitones. */
+  pitch?: number;
+  /** Raw `playbackRate` override. */
+  rate?: number;
+  /** Cut the tail after this many frames. */
+  durationInFrames?: number;
+}
+
+/**
+ * Deterministic rotation slot for a single cue. Stable for a given
+ * `(category, frame)` — re-rendering the same frame never re-rolls — but spread
+ * across frames by a 32-bit integer avalanche, so separate beats pick different
+ * variations instead of always landing on the first one.
+ */
+const slotForFrame = (category: SfxCategory, frame: number): number => {
+  const n = sfxVariations(category).length;
+  if (n <= 1) return 0;
+  let x = (Math.trunc(frame) ^ 0x9e3779b9) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x21f0aaad) >>> 0;
+  x = Math.imul(x ^ (x >>> 15), 0x735a2d97) >>> 0;
+  x = (x ^ (x >>> 15)) >>> 0;
+  return x % n;
+};
+
+const resolveRotatedId = (
+  category: SfxCategory,
+  options: PlayRotatedSfxOptions,
+): SfxId => {
+  if (options.id !== undefined) return options.id;
+  if (options.history !== undefined) return rotatedSfxId(category, options.history);
+  if (options.index !== undefined) return cyclicSfxId(category, options.index);
+  return cyclicSfxId(category, slotForFrame(category, options.frame ?? 0));
+};
+
+/**
+ * Rotated single-cue helper. Resolves a variation deterministically:
+ * `id` (explicit) → `history` (exact rotation) → `index` → frame-derived slot.
+ * Applies the soft **0.25 master volume** and returns `PlaySfx` props:
+ *
+ * ```tsx
+ * <PlaySfx {...playRotatedSfx("clicks", { frame: at(beat) })} />
+ * ```
+ *
+ * Pure and frame-driven — safe to call during render. For a whole cue sheet with
+ * the strict "no asset more than twice in a row" guarantee, use
+ * `buildRotatedSfxCues` (built inside a `useMemo`).
+ */
+export const playRotatedSfx = (
+  category: SfxCategory,
+  options: PlayRotatedSfxOptions = {},
+): PlaySfxProps => ({
+  id: resolveRotatedId(category, options),
+  frame: options.frame ?? 0,
+  extraFrames: options.extraFrames,
+  volume: clamp01(options.volume ?? 1) * SFX_MASTER_VOLUME,
+  pitch: options.pitch,
+  rate: options.rate,
+  durationInFrames: options.durationInFrames,
+});
+
+export interface BuildRotatedSfxCuesOptions {
+  /** Per-cue volume multiplier (0..1); use with the 0.25 master scale. */
+  volume?: number;
+  /** Pitch modulation in semitones applied to every cue. */
+  pitch?: number;
+}
+
+/**
+ * Build a beat-locked, automatically rotated cue sheet for one category.
+ * Deterministic and sequence-aware: cycles the category's file-unique variations
+ * via `rotatedSfxId`, guaranteeing no asset plays more than twice in a row
+ * (rules/03 §5.2). Build inside a `useMemo` — never per frame.
+ */
+export const buildRotatedSfxCues = (
+  category: SfxCategory,
+  frames: number[],
+  options: BuildRotatedSfxCuesOptions = {},
+): SfxCue[] => {
+  const rotator = createSfxRotator();
+  return frames.map((frame) => ({
+    id: rotator.next(category),
+    frame,
+    volume: options.volume,
+    pitch: options.pitch,
+  }));
+};
 
 export interface PlayMusicProps {
   id: MusicId;

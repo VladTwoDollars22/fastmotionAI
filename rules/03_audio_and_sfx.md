@@ -120,6 +120,14 @@ The mix must read **high-end SaaS**: enriched, never harsh, never fatiguing.
 - Match the audio's quality to the visual polish — a pristine 4K-clean UI deserves clean,
   de-essed, well-rounded sound design, not stock "beeps".
 
+## 5.2 — SFX diversity, rotation & volume (mandatory)
+
+- **No duplication.** NEVER play the exact same SFX asset (`.mp3`) more than **twice
+  sequentially** in a single video. Rotate across the library (e.g. `click_soft_light` →
+  `click_tactile_bubble` → `tap_modern_ui`) so repeated interactions never sound copy-pasted.
+- **Balanced volume.** Default master volume for UI SFX is soft: **0.15–0.35** relative to
+  the music/narration tracks. Only motivated accents may exceed this briefly, and never clip.
+
 ## 6. Cinematic Audio Architecture (MANDATORY layering)
 
 Sound design is a **layer stack** aligned to the visual beat sheet. Every scene MUST
