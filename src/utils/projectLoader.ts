@@ -119,6 +119,25 @@ export interface LoadedProject {
 export const ASSET_PREFIX = "bundles";
 export const PROJECT_IDS: string[] = Object.keys(BUNDLE_REGISTRY);
 
+/** Preferred reference bundle; used as the fallback when a requested id is absent. */
+export const PREFERRED_DEFAULT_PROJECT_ID = "_template";
+
+/**
+ * A safe default bundle id that always resolves: `_template` when present,
+ * otherwise the first available bundle. Empty only when no bundles exist at all.
+ * This keeps clean clones (where project-specific bundles are git-ignored) renderable.
+ */
+export const DEFAULT_PROJECT_ID: string =
+  PROJECT_IDS.length === 0
+    ? ""
+    : PROJECT_IDS.includes(PREFERRED_DEFAULT_PROJECT_ID)
+      ? PREFERRED_DEFAULT_PROJECT_ID
+      : PROJECT_IDS[0];
+
+/** Resolve a requested id to a renderable one, falling back to the default bundle. */
+export const resolveProjectId = (requested?: string | null): string =>
+  requested && PROJECT_IDS.includes(requested) ? requested : DEFAULT_PROJECT_ID;
+
 const SFX_EXTS = ["wav", "mp3", "m4a", "aac", "ogg", "flac"];
 const SFX_DIRS = ["sources/audio/sfx", "sources/sfx", "sources/audio"];
 
@@ -445,13 +464,31 @@ export const loadProject = (
   id: string,
   registry: Record<string, RawBundle> = BUNDLE_REGISTRY,
 ): LoadedProject => {
-  if (!Object.prototype.hasOwnProperty.call(registry, id)) {
-    throw new Error(
-      `Project bundle "${id}" not found in input/. Available: ${
-        Object.keys(registry).join(", ") || "(none)"
-      }.`,
+  const available = Object.keys(registry);
+  const warnings: string[] = [];
+
+  if (available.length === 0) {
+    warnings.push(
+      "No project bundles found in input/; rendering a placeholder project. Run `npm run bundles` after adding a bundle.",
+    );
+    return buildProject(
+      id,
+      { styleguide: null, content: null, prompt: null, files: [] },
+      warnings,
     );
   }
-  const warnings: string[] = [];
-  return buildProject(id, registry[id], warnings);
+
+  if (Object.prototype.hasOwnProperty.call(registry, id)) {
+    return buildProject(id, registry[id], warnings);
+  }
+
+  const fallback = available.includes(PREFERRED_DEFAULT_PROJECT_ID)
+    ? PREFERRED_DEFAULT_PROJECT_ID
+    : available[0];
+  warnings.push(
+    `Project bundle "${id}" not found; falling back to "${fallback}". Available: ${available.join(
+      ", ",
+    )}.`,
+  );
+  return buildProject(fallback, registry[fallback], warnings);
 };

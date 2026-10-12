@@ -40,9 +40,24 @@ export interface ChaosCopy {
   line2: string;
   bigChaos: string;
   caption: string;
+  cardLabel: string;
   bigOrder: string;
   subtitle: string;
 }
+
+/** Split a bundle string into short display clauses (comma/semicolon/dash separated). */
+export const splitClauses = (text: string): string[] =>
+  text
+    .replace(/\s+/g, " ")
+    .split(/[,;:|\u2014\u2013\u2022]/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+
+export const toUpper = (text: string | null | undefined): string =>
+  (text ?? "").trim().toUpperCase();
+
+export const truncateText = (text: string, max = 20): string =>
+  text.length > max ? `${text.slice(0, max - 1).trimEnd()}\u2026` : text;
 
 export interface Palette {
   background: string;

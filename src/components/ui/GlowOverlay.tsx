@@ -2,6 +2,7 @@ import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { floatOffset } from "../../utils/kinetics";
+import type { SpringPhysics } from "../../utils/motionPresets";
 
 export interface GlowOverlayProps {
   color?: string;
@@ -12,6 +13,7 @@ export interface GlowOverlayProps {
   pulse?: number;
   drift?: number;
   seed?: string | number;
+  physics?: SpringPhysics;
   style?: CSSProperties;
   className?: string;
 }
@@ -25,6 +27,7 @@ export const GlowOverlay: FC<GlowOverlayProps> = ({
   pulse = 1,
   drift = 26,
   seed = "glow",
+  physics,
   style,
   className,
 }) => {
@@ -34,7 +37,7 @@ export const GlowOverlay: FC<GlowOverlayProps> = ({
   const appear = spring({
     frame: Math.max(0, frame - delay),
     fps,
-    config: { damping: 200 },
+    config: physics ?? { damping: 200, stiffness: 120, mass: 1 },
     from: 0,
     to: 1,
   });

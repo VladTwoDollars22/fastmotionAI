@@ -1,12 +1,12 @@
 import type { FC } from "react";
 import { useMemo } from "react";
-import { AbsoluteFill, Sequence, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
 import { BackgroundField } from "../../components/3d/BackgroundField";
 import { AudioEngine, type AudioCue } from "../../components/audio/AudioEngine";
 import { PaperGrain } from "../../components/ui/PaperGrain";
-import { loadProject } from "../../utils/projectLoader";
-import { SceneChaos } from "./SceneChaos";
-import { SceneOrder } from "./SceneOrder";
+import { DEFAULT_PROJECT_ID, loadProject } from "../../utils/projectLoader";
+import { resolveSceneSprings } from "../../utils/motionPresets";
+import { resolveSceneRenderer } from "./sceneRegistry";
 import {
   buildPalette,
   cameraFrame,
@@ -14,14 +14,14 @@ import {
   lerpHex,
   shakeOffset,
   smoothstep,
+  splitClauses,
+  toUpper,
+  truncateText,
   type ChaosCopy,
   type Palette,
   type PunchTrigger,
   type ShakeTrigger,
 } from "./theme";
-
-export const FREELANCE_PROJECT_ID =
-  "project_2026_10_12_freelance_chaos_to_order";
 
 const SCENE_FRAMES = 150;
 
@@ -55,32 +55,48 @@ export interface ChaosOrderSceneProps {
 }
 
 export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
-  projectId = FREELANCE_PROJECT_ID,
+  projectId = DEFAULT_PROJECT_ID,
 }) => {
   const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
   const project = useMemo(() => loadProject(projectId), [projectId]);
   const palette = useMemo<Palette>(
     () => buildPalette(project.styleguide),
     [project],
   );
+  const springs = useMemo(
+    () => resolveSceneSprings(project.styleguide.motionPresets),
+    [project],
+  );
 
+  const scenes = project.content.scenes;
+  const acts = useMemo(() => {
+    const max = Math.max(1, Math.floor(durationInFrames / SCENE_FRAMES));
+    return scenes.slice(0, Math.min(scenes.length, max));
+  }, [scenes, durationInFrames]);
+
+  // Every display string is derived from the bundle (headline / body / cta / brand).
   const copy = useMemo<ChaosCopy>(() => {
-    const scenes = project.content.scenes;
     const chaos = scenes[0];
     const order = scenes[1] ?? scenes[0];
+    const brand = project.styleguide.brand;
+    const chaosBody = (chaos?.body ?? "").trim();
+    const clauses = splitClauses(chaosBody);
+    const lastClause = clauses.length > 0 ? clauses[clauses.length - 1] : "";
     return {
-      line1: "5 FREELANCERS",
-      line2: "NO SYNC",
-      bigChaos: (chaos?.headline ?? "Chaos").toUpperCase(),
-      caption: chaos?.body || "Everything is fragmented.",
-      bigOrder: project.content.cta || "ONE UNIFIED SYSTEM",
-      subtitle: order?.body || "One system. Every client. Zero chaos.",
+      line1: toUpper(clauses[0] ?? chaos?.headline ?? brand),
+      line2: toUpper(clauses[1] ?? brand ?? order?.headline),
+      bigChaos: toUpper(chaos?.headline ?? brand),
+      caption: chaosBody || (order?.headline ?? brand),
+      cardLabel: truncateText(toUpper(lastClause || chaos?.headline || brand)),
+      bigOrder: toUpper(order?.headline ?? project.content.cta ?? brand),
+      subtitle: order?.body ?? "",
     };
-  }, [project]);
+  }, [project, scenes]);
 
   const cues = useMemo<AudioCue[]>(() => {
     const list: AudioCue[] = [];
-    project.content.scenes.slice(0, 2).forEach((scene, index) => {
+    acts.forEach((scene, index) => {
       const start = index * SCENE_FRAMES;
       const scale =
         scene.durationInFrames > 0 ? SCENE_FRAMES / scene.durationInFrames : 1;
@@ -96,7 +112,7 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
       }
     });
     return list;
-  }, [project]);
+  }, [acts, project]);
 
   const musicSrc = project.styleguide.music.src
     ? project.resolveMedia(project.styleguide.music.src)
@@ -141,12 +157,25 @@ export const ChaosOrderScene: FC<ChaosOrderSceneProps> = ({
           transform: `translate(${cam.x}px, ${cam.y}px) rotate(${cam.roll}deg) scale(${cam.zoom * 1.08})`,
         }}
       >
-        <Sequence durationInFrames={SCENE_FRAMES}>
-          <SceneChaos palette={palette} energy={palette.energy} copy={copy} />
-        </Sequence>
-        <Sequence from={SCENE_FRAMES} durationInFrames={SCENE_FRAMES}>
-          <SceneOrder palette={palette} energy={palette.energy} copy={copy} />
-        </Sequence>
+        {acts.map((scene, index) => {
+          const Renderer = resolveSceneRenderer(scene);
+          return (
+            <Sequence
+              key={scene.id}
+              from={index * SCENE_FRAMES}
+              durationInFrames={SCENE_FRAMES}
+            >
+              <Renderer
+                project={project}
+                scene={scene}
+                palette={palette}
+                energy={palette.energy}
+                copy={copy}
+                springs={springs}
+              />
+            </Sequence>
+          );
+        })}
 
         <AbsoluteFill
           style={{ transform: `translate(${fgX}px, ${fgY}px)`, pointerEvents: "none" }}

@@ -7,6 +7,7 @@ import { KineticText } from "../../components/ui/KineticText";
 import { OrganicBlob } from "../../components/ui/OrganicBlob";
 import { ParticleBurst } from "../../components/ui/ParticleBurst";
 import { SpeedLines } from "../../components/ui/SpeedLines";
+import type { SceneSprings } from "../../utils/motionPresets";
 import {
   CHAOS_CENTER,
   CHAOS_HOMES,
@@ -77,9 +78,15 @@ export interface SceneChaosProps {
   palette: Palette;
   energy: number;
   copy: ChaosCopy;
+  springs: SceneSprings;
 }
 
-export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
+export const SceneChaos: FC<SceneChaosProps> = ({
+  palette,
+  energy,
+  copy,
+  springs,
+}) => {
   const frame = useCurrentFrame();
   const time = (frame / 30) * energy;
 
@@ -109,6 +116,13 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
 
   const angles = useMemo(() => spikeAngles(SPIKE_COUNT, "spike-a"), []);
 
+  // Compute each anchor's drifted position once per frame (shared by the tendrils
+  // and the blobs) instead of calling noise2D twice for the same index.
+  const anchors = CHAOS_HOMES.map((home, index) => ({
+    x: home.x + noise2D(`bx${index}`, time, index) * 30,
+    y: home.y + noise2D(`by${index}`, time, index * 2) * 30,
+  }));
+
   const cardJitterX = noise2D("card-x", time * 3.1, 0) * (2 + caStrength * 10);
   const cardJitterY = noise2D("card-y", time * 3.4, 1) * (2 + caStrength * 10);
   const chaosColor = palette.chaos[0];
@@ -126,42 +140,35 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
             ))}
           </g>
 
-          {CHAOS_HOMES.map((home, index) => {
-            const bx = home.x + noise2D(`bx${index}`, time, index) * 30;
-            const by = home.y + noise2D(`by${index}`, time, index * 2) * 30;
-            return (
-              <Tendril
-                key={`t${index}`}
-                from={{ x: bx, y: by }}
-                to={CHAOS_CENTER}
-                color={palette.chaos[index]}
-                seed={`tendril${index}`}
-                opacity={0.28}
-                speed={energy}
-              />
-            );
-          })}
+          {anchors.map((anchor, index) => (
+            <Tendril
+              key={`t${index}`}
+              from={{ x: anchor.x, y: anchor.y }}
+              to={CHAOS_CENTER}
+              color={palette.chaos[index]}
+              seed={`tendril${index}`}
+              opacity={0.28}
+              speed={energy}
+            />
+          ))}
 
-          {CHAOS_HOMES.map((home, index) => {
-            const bx = home.x + noise2D(`bx${index}`, time, index) * 30;
-            const by = home.y + noise2D(`by${index}`, time, index * 2) * 30;
-            return (
-              <OrganicBlob
-                key={`b${index}`}
-                cx={bx}
-                cy={by}
-                r={index === 4 ? 96 : 78}
-                color={palette.chaos[index]}
-                seed={`blob${index}`}
-                speed={(1.1 + index * 0.1) * energy}
-                wobble={0.34}
-                spin={6 + index * 2}
-                delay={index * 5}
-                glow={26}
-                opacity={0.9}
-              />
-            );
-          })}
+          {anchors.map((anchor, index) => (
+            <OrganicBlob
+              key={`b${index}`}
+              cx={anchor.x}
+              cy={anchor.y}
+              r={index === 4 ? 96 : 78}
+              color={palette.chaos[index]}
+              seed={`blob${index}`}
+              speed={(1.1 + index * 0.1) * energy}
+              wobble={0.34}
+              spin={6 + index * 2}
+              delay={index * 5}
+              glow={26}
+              opacity={0.9}
+              physics={springs.entrance}
+            />
+          ))}
 
           {spikeGrow > 0
             ? angles.map((angle, index) => {
@@ -314,15 +321,17 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
             bottom: 34,
             left: 0,
             right: 0,
+            padding: "0 24px",
             textAlign: "center",
             color: palette.text,
-            fontSize: 30,
+            fontSize: 24,
             fontWeight: 700,
-            letterSpacing: 6,
+            letterSpacing: 3,
+            textTransform: "uppercase",
             opacity: 0.85,
           }}
         >
-          FRAGMENTED
+          {copy.cardLabel}
         </span>
       </div>
 
@@ -333,8 +342,9 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
           delay={8}
           stagger={4}
           entry="pop"
-          damping={12}
-          stiffness={220}
+          damping={springs.entrance.damping}
+          stiffness={springs.entrance.stiffness}
+          mass={springs.entrance.mass}
           motionBlur={10}
           style={{
             fontSize: 84,
@@ -353,8 +363,9 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
           delay={44}
           stagger={5}
           entry="pop"
-          damping={11}
-          stiffness={230}
+          damping={springs.entrance.damping}
+          stiffness={springs.entrance.stiffness}
+          mass={springs.entrance.mass}
           rotate={-6}
           motionBlur={10}
           style={{
@@ -374,8 +385,9 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
           delay={74}
           stagger={3}
           entry="scale"
-          damping={10}
-          stiffness={240}
+          damping={springs.entrance.damping}
+          stiffness={springs.entrance.stiffness}
+          mass={springs.entrance.mass}
           rotate={-8}
           motionBlur={14}
           style={{
@@ -395,7 +407,9 @@ export const SceneChaos: FC<SceneChaosProps> = ({ palette, energy, copy }) => {
           delay={114}
           stagger={3}
           entry="up"
-          damping={22}
+          damping={springs.settle.damping}
+          stiffness={springs.settle.stiffness}
+          mass={springs.settle.mass}
           style={{
             fontSize: 40,
             fontWeight: 500,

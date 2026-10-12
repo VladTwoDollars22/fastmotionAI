@@ -9,20 +9,21 @@ import { ThreeCanvas } from "../components/3d/ThreeCanvas";
 import { GlassPanel } from "../components/ui/GlassPanel";
 import { KineticText } from "../components/ui/KineticText";
 import {
+  DEFAULT_PROJECT_ID,
   loadProject,
   type LoadedProject,
   type ProjectScene,
 } from "../utils/projectLoader";
+import { resolveSceneSprings, type SceneSprings } from "../utils/motionPresets";
 
-export const DEFAULT_PROJECT_ID = "_template";
-
-export type MainVideoProps = { projectId?: string };
+export type TestSceneProps = { projectId?: string };
 
 export const SceneOverlay: FC<{
   scene: ProjectScene;
   start: number;
   project: LoadedProject;
-}> = ({ scene, start, project }) => {
+  springs: SceneSprings;
+}> = ({ scene, start, project, springs }) => {
   const { colors, fonts } = project.styleguide;
   const media = scene.media ? project.resolveMedia(scene.media) : null;
 
@@ -51,6 +52,9 @@ export const SceneOverlay: FC<{
             mode="word"
             delay={6}
             stagger={4}
+            damping={springs.entrance.damping}
+            stiffness={springs.entrance.stiffness}
+            mass={springs.entrance.mass}
             style={{
               color: colors.text,
               fontSize: 96,
@@ -62,6 +66,7 @@ export const SceneOverlay: FC<{
           {media ? (
             <GlassPanel
               delay={14}
+              physics={springs.settle}
               style={{ padding: 0, overflow: "hidden", width: 520 }}
             >
               <Img
@@ -71,7 +76,11 @@ export const SceneOverlay: FC<{
             </GlassPanel>
           ) : null}
           {scene.body ? (
-            <GlassPanel delay={20} style={{ padding: "28px 36px", maxWidth: 780 }}>
+            <GlassPanel
+              delay={20}
+              physics={springs.settle}
+              style={{ padding: "28px 36px", maxWidth: 780 }}
+            >
               <p
                 style={{
                   margin: 0,
@@ -90,6 +99,7 @@ export const SceneOverlay: FC<{
         <GlassPanel
           delay={26}
           direction="down"
+          physics={springs.settle}
           style={{ padding: "22px 34px" }}
         >
           <span
@@ -108,11 +118,15 @@ export const SceneOverlay: FC<{
   );
 };
 
-export const TestScene: FC<MainVideoProps> = ({
+export const TestScene: FC<TestSceneProps> = ({
   projectId = DEFAULT_PROJECT_ID,
 }) => {
   const project = useMemo(() => loadProject(projectId), [projectId]);
   const { styleguide, content } = project;
+  const springs = useMemo(
+    () => resolveSceneSprings(styleguide.motionPresets),
+    [styleguide],
+  );
 
   const timeline = useMemo(() => {
     let cursor = 0;
@@ -161,11 +175,18 @@ export const TestScene: FC<MainVideoProps> = ({
           size={[2, 2.7, 0.2]}
           color={styleguide.colors.primary}
           accent={styleguide.colors.accent}
+          physics={springs.settle}
         />
       </ThreeCanvas>
 
       {timeline.map(({ scene, start }) => (
-        <SceneOverlay key={scene.id} scene={scene} start={start} project={project} />
+        <SceneOverlay
+          key={scene.id}
+          scene={scene}
+          start={start}
+          project={project}
+          springs={springs}
+        />
       ))}
 
       <AudioEngine

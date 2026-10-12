@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, "..");
 const INPUT_DIR = path.join(ROOT, "input");
 const OUTPUT_DIR = path.join(ROOT, "output");
 const ENTRY = "src/index.ts";
-const COMPOSITION = "TemplateVideo";
+const COMPOSITION = "MainVideo";
 const REMOTION_CLI = path.join(
   ROOT,
   "node_modules",
@@ -18,6 +18,8 @@ const REMOTION_CLI = path.join(
 const REQUIRED_FILES = ["content.json", "styleguide.json"];
 const IGNORED_DIRS = ["_template", "node_modules"];
 const DEBOUNCE_MS = 800;
+const STABLE_INTERVAL_MS = 250;
+const STABLE_TIMEOUT_MS = 8000;
 
 const C = {
   reset: "\u001b[0m",
@@ -106,6 +108,59 @@ const isValidProject = (id: string): boolean => {
   return true;
 };
 
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Deterministic fingerprint of a bundle folder (relative paths + sizes + mtimes). */
+const dirSignature = (dir: string): string => {
+  const parts: string[] = [];
+  const walk = (current: string, base: string): void => {
+    try {
+      for (const entry of readdirSync(current, { withFileTypes: true })) {
+        const rel = base ? `${base}/${entry.name}` : entry.name;
+        const full = path.join(current, entry.name);
+        if (entry.isDirectory()) {
+          walk(full, rel);
+        } else if (entry.isFile()) {
+          try {
+            const stats = statSync(full);
+            parts.push(`${rel}:${stats.size}:${Math.round(stats.mtimeMs)}`);
+          } catch {
+            // File vanished mid-walk; leave it out of this sample.
+          }
+        }
+      }
+    } catch {
+      // Directory unreadable or removed mid-walk; treat as an empty sample.
+    }
+  };
+  walk(dir, "");
+  parts.sort();
+  return parts.join("|");
+};
+
+/**
+ * Wait until a bundle is fully written: content/styleguide exist and parse, and
+ * the whole folder (including sources/) stops changing between two samples.
+ * Prevents rendering half-copied bundles.
+ */
+const waitForStableBundle = async (id: string): Promise<boolean> => {
+  const dir = path.join(INPUT_DIR, id);
+  if (!isValidProject(id)) return false;
+  let previous = "";
+  const deadline = Date.now() + STABLE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const signature = dirSignature(dir);
+    if (signature.length > 0 && signature === previous) return true;
+    previous = signature;
+    await delay(STABLE_INTERVAL_MS);
+  }
+  log.warn(
+    `Assets for "${id}" did not settle within ${STABLE_TIMEOUT_MS}ms; rendering with the current snapshot.`,
+  );
+  return isValidProject(id);
+};
+
 const run = (
   command: string,
   commandArgs: string[],
@@ -131,7 +186,7 @@ const renderProject = async (
   id: string,
   outFile: string | null,
 ): Promise<void> => {
-  if (!isValidProject(id)) {
+  if (!(await waitForStableBundle(id))) {
     log.warn(`Skipping "${id}" — missing or invalid content.json/styleguide.json.`);
     return;
   }
@@ -237,6 +292,9 @@ const watch = (): void => {
   });
 
   watcher.on("addDir", (dir: string) => {
+    // Only top-level project folders (input/<id>) are render candidates; nested
+    // sources/ folders appear during a copy and must not trigger renders.
+    if (path.dirname(dir) !== INPUT_DIR) return;
     schedule(path.basename(dir));
   });
 

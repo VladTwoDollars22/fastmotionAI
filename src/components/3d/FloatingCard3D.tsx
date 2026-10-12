@@ -2,6 +2,7 @@ import { RoundedBox } from "@react-three/drei";
 import type { FC } from "react";
 import { useMemo } from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import type { SpringPhysics } from "../../utils/motionPresets";
 
 export type CardQuality = "auto" | "preview" | "high";
 
@@ -13,6 +14,7 @@ export interface FloatingCard3DProps {
   radius?: number;
   floatSpeed?: number;
   delay?: number;
+  physics?: SpringPhysics;
 }
 
 export const FloatingCard3D: FC<FloatingCard3DProps> = ({
@@ -23,6 +25,7 @@ export const FloatingCard3D: FC<FloatingCard3DProps> = ({
   radius = 0.18,
   floatSpeed = 1,
   delay = 0,
+  physics,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -31,7 +34,7 @@ export const FloatingCard3D: FC<FloatingCard3DProps> = ({
   const enter = spring({
     frame: Math.max(0, frame - delay),
     fps,
-    config: { damping: 200 },
+    config: physics ?? { damping: 200, stiffness: 120, mass: 1 },
     from: 0,
     to: 1,
   });

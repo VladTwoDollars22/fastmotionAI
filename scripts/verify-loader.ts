@@ -1,6 +1,7 @@
 import {
   buildProject,
   loadProject,
+  type LoadedProject,
   type RawBundle,
 } from "../src/utils/projectLoader";
 
@@ -108,12 +109,18 @@ try {
 
 {
   let threw = false;
+  let project: LoadedProject | undefined;
   try {
-    loadProject("does-not-exist");
+    project = loadProject("does-not-exist");
   } catch {
     threw = true;
   }
-  check("unknown project id throws", threw);
+  check("unknown project id does not throw", !threw);
+  check(
+    "unknown project id falls back with a warning",
+    !threw && !!project && project.warnings.some((w) => w.includes("not found")),
+    project ? project.warnings.join("; ") : "threw",
+  );
 }
 
 {

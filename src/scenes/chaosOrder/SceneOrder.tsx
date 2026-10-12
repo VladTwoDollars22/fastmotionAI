@@ -1,7 +1,7 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import { useMemo } from "react";
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { AbsoluteFill, getRemotionEnvironment, useCurrentFrame } from "remotion";
 import { GlowOverlay } from "../../components/ui/GlowOverlay";
 import { KineticText } from "../../components/ui/KineticText";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../../components/ui/Metaballs";
 import { ParticleBurst } from "../../components/ui/ParticleBurst";
 import { SpeedLines } from "../../components/ui/SpeedLines";
+import type { SceneSprings } from "../../utils/motionPresets";
 import {
   CHAOS_CENTER,
   CHAOS_HOMES,
@@ -37,10 +38,17 @@ export interface SceneOrderProps {
   palette: Palette;
   energy: number;
   copy: ChaosCopy;
+  springs: SceneSprings;
 }
 
-export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
+export const SceneOrder: FC<SceneOrderProps> = ({
+  palette,
+  energy,
+  copy,
+  springs,
+}) => {
   const frame = useCurrentFrame();
+  const { isRendering } = getRemotionEnvironment();
   const time = (frame / 30) * energy;
 
   const mergeP = smoothstep(20, 66, frame);
@@ -146,7 +154,11 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
                     r={8}
                     fill={color}
                     opacity={appear * 0.9}
-                    style={{ filter: `drop-shadow(0 0 12px ${color})` }}
+                    style={
+                      isRendering
+                        ? { filter: `drop-shadow(0 0 12px ${color})` }
+                        : undefined
+                    }
                   />
                 );
               })
@@ -299,7 +311,11 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
-            style={{ filter: `drop-shadow(0 0 16px ${palette.accent})` }}
+            style={
+              isRendering
+                ? { filter: `drop-shadow(0 0 16px ${palette.accent})` }
+                : undefined
+            }
           />
 
           {[0, 1, 2, 3, 4].map((index) => {
@@ -351,8 +367,9 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
           delay={104}
           stagger={5}
           entry="up"
-          damping={14}
-          stiffness={210}
+          damping={springs.entrance.damping}
+          stiffness={springs.entrance.stiffness}
+          mass={springs.entrance.mass}
           motionBlur={8}
           style={{
             fontSize: 96,
@@ -383,7 +400,9 @@ export const SceneOrder: FC<SceneOrderProps> = ({ palette, energy, copy }) => {
           delay={118}
           stagger={3}
           entry="up"
-          damping={24}
+          damping={springs.settle.damping}
+          stiffness={springs.settle.stiffness}
+          mass={springs.settle.mass}
           style={{
             fontSize: 38,
             fontWeight: 500,

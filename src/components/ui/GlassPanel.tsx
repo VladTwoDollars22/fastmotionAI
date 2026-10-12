@@ -1,5 +1,6 @@
 import type { CSSProperties, FC, ReactNode } from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import type { SpringPhysics } from "../../utils/motionPresets";
 
 export type PanelDirection = "up" | "down" | "left" | "right";
 
@@ -7,6 +8,7 @@ export interface GlassPanelProps {
   children?: ReactNode;
   delay?: number;
   direction?: PanelDirection;
+  physics?: SpringPhysics;
   className?: string;
   style?: CSSProperties;
 }
@@ -30,6 +32,7 @@ export const GlassPanel: FC<GlassPanelProps> = ({
   children,
   delay = 0,
   direction = "up",
+  physics,
   className,
   style,
 }) => {
@@ -39,7 +42,7 @@ export const GlassPanel: FC<GlassPanelProps> = ({
   const progress = spring({
     frame: Math.max(0, frame - delay),
     fps,
-    config: { damping: 200 },
+    config: physics ?? { damping: 200, stiffness: 120, mass: 1 },
     from: 0,
     to: 1,
   });

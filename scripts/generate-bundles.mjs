@@ -10,19 +10,23 @@ const outFile = path.join(root, "src", "utils", "bundleRegistry.generated.ts");
 
 const toPosix = (p) => p.split(path.sep).join("/");
 
-const readJson = async (file) => {
+const readText = async (file, label) => {
   try {
-    return JSON.parse(await readFile(file, "utf8"));
-  } catch {
-    return null;
+    return await readFile(file, "utf8");
+  } catch (error) {
+    // Missing files are tolerated (the loader applies defaults); anything else is fatal.
+    if (error && error.code === "ENOENT") return null;
+    throw new Error(`Failed to read ${label}: ${error.message}`);
   }
 };
 
-const readText = async (file) => {
+const readJson = async (file, label) => {
+  const text = await readText(file, label);
+  if (text === null) return null;
   try {
-    return await readFile(file, "utf8");
-  } catch {
-    return null;
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(`Malformed JSON in ${label}: ${error.message}`);
   }
 };
 
@@ -55,16 +59,58 @@ const listProjects = async () => {
 const main = async () => {
   const projects = await listProjects();
   const registry = {};
+  const parsed = [];
+  const errors = [];
+  const warnings = [];
+
+  // 1. Validate every bundle BEFORE touching public/ or the registry, so a bad
+  //    JSON file fails loudly instead of silently becoming `null`.
+  for (const id of projects) {
+    const dir = path.join(inputDir, id);
+    try {
+      const styleguide = await readJson(
+        path.join(dir, "styleguide.json"),
+        `input/${id}/styleguide.json`,
+      );
+      const content = await readJson(
+        path.join(dir, "content.json"),
+        `input/${id}/content.json`,
+      );
+      const prompt = await readText(
+        path.join(dir, "prompt.txt"),
+        `input/${id}/prompt.txt`,
+      );
+      if (styleguide === null) {
+        warnings.push(
+          `input/${id}/styleguide.json is missing; engine defaults will be used.`,
+        );
+      }
+      if (content === null) {
+        warnings.push(
+          `input/${id}/content.json is missing; bundle will render no scenes.`,
+        );
+      }
+      parsed.push({ id, dir, styleguide, content, prompt });
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  for (const warning of warnings) console.warn(`warning: ${warning}`);
+
+  if (errors.length > 0) {
+    console.error("\nBundle registry build failed:");
+    for (const message of errors) console.error(`  - ${message}`);
+    console.error(
+      "\nFix the malformed file(s) above and run `npm run bundles` again.",
+    );
+    process.exit(1);
+  }
 
   await rm(publicBundles, { recursive: true, force: true });
   await mkdir(publicBundles, { recursive: true });
 
-  for (const id of projects) {
-    const dir = path.join(inputDir, id);
-    const styleguide = await readJson(path.join(dir, "styleguide.json"));
-    const content = await readJson(path.join(dir, "content.json"));
-    const prompt = await readText(path.join(dir, "prompt.txt"));
-
+  for (const { id, dir, styleguide, content, prompt } of parsed) {
     let files = [];
     const sourcesDir = path.join(dir, "sources");
     const hasSources = await stat(sourcesDir).then(
@@ -103,6 +149,7 @@ const main = async () => {
 };
 
 main().catch((err) => {
-  console.error(err);
+  console.error("\nBundle registry build failed:");
+  console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

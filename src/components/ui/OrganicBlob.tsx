@@ -1,6 +1,12 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  getRemotionEnvironment,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+import type { SpringPhysics } from "../../utils/motionPresets";
 
 export interface OrganicBlobProps {
   cx: number;
@@ -15,6 +21,7 @@ export interface OrganicBlobProps {
   delay?: number;
   glow?: number;
   spin?: number;
+  physics?: SpringPhysics;
   style?: CSSProperties;
 }
 
@@ -57,17 +64,19 @@ export const OrganicBlob: FC<OrganicBlobProps> = ({
   delay = 0,
   glow = 0,
   spin = 4,
+  physics,
   style,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { isRendering } = getRemotionEnvironment();
   const time = frame / fps;
   const rotation = (spin * time * Math.PI) / 180;
 
   const appear = spring({
     frame: Math.max(0, frame - delay),
     fps,
-    config: { damping: 16, stiffness: 110 },
+    config: physics ?? { damping: 16, stiffness: 110, mass: 0.9 },
     from: 0,
     to: 1,
   });
@@ -92,7 +101,11 @@ export const OrganicBlob: FC<OrganicBlobProps> = ({
       fill={color}
       opacity={opacity * appear}
       style={{
-        filter: glow > 0 ? `drop-shadow(0 0 ${glow}px ${color})` : undefined,
+        // A per-frame drop-shadow re-rasterizes the whole path; render-only.
+        filter:
+          glow > 0 && isRendering
+            ? `drop-shadow(0 0 ${glow}px ${color})`
+            : undefined,
         ...style,
       }}
     />
