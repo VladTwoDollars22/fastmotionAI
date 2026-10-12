@@ -5,9 +5,10 @@ import { AbsoluteFill, random, spring, useCurrentFrame, useVideoConfig } from "r
 import { BrowserFrame } from "../../components/ui/BrowserFrame";
 import { KineticText } from "../../components/ui/KineticText";
 import { ParticleBurst } from "../../components/ui/ParticleBurst";
-import { dampedImpulse, floatOffset } from "../../utils/kinetics";
+import { dampedImpulse } from "../../utils/kinetics";
+import { PlaySfx } from "../../utils/audioLibrary";
 import { mixHex, progressBetween, withAlpha, type PromoSceneProps } from "./brief";
-import { HOOK_T, beatClock } from "./timeline";
+import { HOOK_T, TRANSITION_FRAMES, beatClock } from "./timeline";
 
 const BROWSER = { left: 130, top: 236, width: 860, height: 600 };
 const SPINNER = { x: 430, y: 250, size: 132 };
@@ -53,9 +54,8 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
     ? 0.36
     : 0.04 + 0.2 * (1 - Math.pow(1 - Math.min(1, frame / 18), 2)) + 0.12 * lagT;
 
-  const drift = floatOffset(frame, "hook-browser", 8, 10, 0.5);
-  const tilt = 9 + 2.4 * Math.sin(frame / 30);
-  const textDrift = floatOffset(frame, "hook-text", 5, 6, 0.4);
+  // Camera-stable composition: no drift, no time-based tilt.
+  const tilt = 9;
 
   const shimmerX = ((frame * 14) % 1400) - 400;
   const spinnerScale = glitched ? Math.max(0, 1 - snap * 1.4) : 1;
@@ -81,7 +81,7 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           position: "absolute",
           left: BROWSER.left,
           top: BROWSER.top,
-          transform: `translate(${drift.x + (1 - enter) * -120}px, ${drift.y + (1 - enter) * 60}px) perspective(1600px) rotateY(${tilt}deg) rotateX(${3 + 1.2 * Math.cos(frame / 40)}deg) scale(${0.9 + 0.1 * enter})`,
+          transform: `translate(${(1 - enter) * -120}px, ${(1 - enter) * 60}px) perspective(1600px) rotateY(${tilt}deg) rotateX(3deg) scale(${0.9 + 0.1 * enter})`,
           opacity: enter,
         }}
       >
@@ -308,7 +308,7 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           left: 1080,
           top: 300,
           width: 730,
-          transform: `translate(${textDrift.x}px, ${textDrift.y}px) scale(${headlinePunch})`,
+          transform: `scale(${headlinePunch})`,
           transformOrigin: "0% 50%",
         }}
       >
@@ -371,6 +371,15 @@ export const HookScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           />
         ) : null}
       </div>
+
+      {/* SFX: error glitch at the warning burst + whoosh on the swipe out. */}
+      <PlaySfx id="glitch" frame={glitchAt} volume={0.9} />
+      <PlaySfx
+        id="whoosh"
+        frame={Math.max(0, beat.durationInFrames - TRANSITION_FRAMES)}
+        volume={0.7}
+        pitch={-2}
+      />
     </AbsoluteFill>
   );
 };

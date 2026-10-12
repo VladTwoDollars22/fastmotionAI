@@ -1,4 +1,3 @@
-import { noise2D } from "@remotion/noise";
 import type { FC } from "react";
 import { memo, useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
@@ -10,7 +9,7 @@ export interface PromoBackdropProps {
   brief: PromoBrief;
   /** 0..1 alarm flash (hook glitch) that floods the key light with the danger hue. */
   alarm: number;
-  /** Camera offset applied with background-depth parallax. */
+  /** Impact-only camera offset (non-zero ONLY on the two shake frames). */
   camX: number;
   camY: number;
 }
@@ -27,10 +26,6 @@ const tintFor = (role: PromoRole, brief: PromoBrief): string => {
   }
 };
 
-/** Grid scroll speed per beat (px/frame) — the floor rushes during the speed beat. */
-const speedFor = (role: PromoRole): number =>
-  role === "showcase" ? 2.6 : role === "hook" ? 0.35 : role === "offer" ? 0.9 : 1.4;
-
 const BLOB_COUNT = 6;
 
 interface BlobSeed {
@@ -41,9 +36,11 @@ interface BlobSeed {
 }
 
 /**
- * Light-theme environment layer (rule 01 §13): moving key-light gradients whose
- * hue follows the active beat, a perspective floor grid that changes speed and
- * tint per beat, drifting soft orbs, a dot field and a soft vignette.
+ * Light-theme environment layer (rule 01 §13). The environment evolves its hue
+ * per beat and an alarm flash on the hook, but every coordinate is **static**:
+ * no noise drift, no time-based pan, no scrolling grid. The only movement is an
+ * impact parallax driven by `camX`/`camY`, which are zero except on the two
+ * authored impact frames (warning burst / button click).
  */
 const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY }) => {
   const frame = useCurrentFrame();
@@ -59,25 +56,22 @@ const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY })
     }));
   }, []);
 
-  // Blend the environment tint across each beat boundary (±18 frames).
+  // Hue blends across each beat boundary; a colour change, not a translation.
   let tint = beats.length > 0 ? tintFor(beats[0].role, brief) : palette.primary;
-  let gridScroll = 0;
-  for (let i = 0; i < beats.length; i++) {
+  for (let i = 1; i < beats.length; i++) {
     const beat = beats[i];
-    const next = tintFor(beat.role, brief);
-    if (i > 0) tint = mixHex(tint, next, smoothstep(beat.start - 18, beat.start + 18, frame));
-    // Integrate the scroll speed so speed changes never jump the grid position.
-    const span = Math.max(0, Math.min(frame, beat.start + beat.durationInFrames) - beat.start);
-    gridScroll += span * speedFor(beat.role);
+    tint = mixHex(tint, tintFor(beat.role, brief), smoothstep(beat.start - 18, beat.start + 18, frame));
   }
   tint = mixHex(tint, palette.danger, alarm);
 
-  const t = frame / 30;
-  const keyX = 28 + 14 * Math.sin(t * 0.35) + camX * 0.02;
-  const keyY = 26 + 10 * Math.cos(t * 0.28);
-  const fillX = 76 + 10 * Math.cos(t * 0.31);
-  const fillY = 74 + 8 * Math.sin(t * 0.4);
-  const sheenAngle = 115 + 18 * Math.sin(t * 0.22);
+  // Fixed key/fill/sheen anchors — no time-based drift.
+  const keyX = 30;
+  const keyY = 28;
+  const fillX = 74;
+  const fillY = 72;
+  const sheenAngle = 118;
+
+  // Impact-only parallax (zero except on the two shake frames).
   const bgX = camX * -0.35;
   const bgY = camY * -0.35;
 
@@ -94,20 +88,20 @@ const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY })
         }}
       />
 
-      {/* Dot field (upper half), slow diagonal drift. */}
+      {/* Static dot field (upper half). */}
       <AbsoluteFill
         style={{
           transform: `translate(${bgX}px, ${bgY}px)`,
           backgroundImage: `radial-gradient(${withAlpha(palette.muted, 0.22)} 1.4px, transparent 1.6px)`,
           backgroundSize: "34px 34px",
-          backgroundPosition: `${(frame * 0.25) % 34}px ${(frame * 0.12) % 34}px`,
+          backgroundPosition: "0px 0px",
           maskImage: "linear-gradient(180deg, black 0%, rgba(0,0,0,0.5) 40%, transparent 62%)",
           WebkitMaskImage:
             "linear-gradient(180deg, black 0%, rgba(0,0,0,0.5) 40%, transparent 62%)",
         }}
       />
 
-      {/* Perspective floor grid: scroll speed + line tint follow the beat. */}
+      {/* Static perspective floor grid (beat-tinted, no scroll). */}
       <div
         style={{
           position: "absolute",
@@ -119,7 +113,7 @@ const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY })
           transformOrigin: "50% 100%",
           backgroundImage: `linear-gradient(${withAlpha(tint, 0.32)} 1.5px, transparent 1.5px), linear-gradient(90deg, ${withAlpha(tint, 0.26)} 1.5px, transparent 1.5px)`,
           backgroundSize: "88px 88px",
-          backgroundPosition: `0px ${gridScroll % 88}px`,
+          backgroundPosition: "0px 0px",
           maskImage: "linear-gradient(0deg, black 0%, rgba(0,0,0,0.6) 35%, transparent 80%)",
           WebkitMaskImage:
             "linear-gradient(0deg, black 0%, rgba(0,0,0,0.6) 35%, transparent 80%)",
@@ -127,11 +121,8 @@ const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY })
         }}
       />
 
-      {/* Drifting soft orbs (gradient falloff, no blur filter). */}
+      {/* Static soft orbs (gradient falloff, no blur filter, no drift). */}
       {blobs.map((blob, i) => {
-        const dx = 70 * noise2D(`orb-x${i}`, frame * 0.006, i);
-        const dy = 50 * noise2D(`orb-y${i}`, frame * 0.005, i * 2.1);
-        const pulse = 1 + 0.08 * Math.sin(t * 0.6 + i);
         const color = [tint, palette.primary, palette.accent][blob.hueIndex];
         return (
           <div
@@ -145,7 +136,7 @@ const PromoBackdropImpl: FC<PromoBackdropProps> = ({ brief, alarm, camX, camY })
               marginLeft: -blob.r,
               marginTop: -blob.r,
               borderRadius: "50%",
-              transform: `translate(${dx + bgX}px, ${dy + bgY}px) scale(${pulse})`,
+              transform: `translate(${bgX}px, ${bgY}px)`,
               background: `radial-gradient(circle, ${withAlpha(color, 0.14)} 0%, ${withAlpha(color, 0)} 70%)`,
             }}
           />

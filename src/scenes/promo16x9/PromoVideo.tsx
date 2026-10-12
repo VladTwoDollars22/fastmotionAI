@@ -3,12 +3,11 @@ import { useMemo } from "react";
 import { AbsoluteFill, Sequence, useCurrentFrame } from "remotion";
 import { KineticText } from "../../components/ui/KineticText";
 import { PaperGrain } from "../../components/ui/PaperGrain";
+import { PlayMusic } from "../../utils/audioLibrary";
 import {
-  cameraFrame,
   dampedImpulse,
   shakeOffset,
   smoothstep,
-  type PunchTrigger,
   type ShakeTrigger,
 } from "../../utils/kinetics";
 import { DEFAULT_PROJECT_ID, loadProject } from "../../utils/projectLoader";
@@ -23,7 +22,19 @@ import { HookScene } from "./HookScene";
 import { OfferScene } from "./OfferScene";
 import { PromoBackdrop } from "./PromoBackdrop";
 import { SolutionScene } from "./SolutionScene";
-import { TRANSITION_FRAMES, globalCues } from "./timeline";
+import { TRANSITION_FRAMES } from "./timeline";
+
+/**
+ * Camera impact shake is allowed ONLY on these two frames: the Scene-1 warning
+ * burst and the Scene-3 "Записаться" button click. Every other frame keeps the
+ * camera perfectly still (no pan, no roll, no breathing).
+ */
+const WARNING_FRAME = 60;
+const CLICK_FRAME = 520;
+const SHAKES: ShakeTrigger[] = [
+  { start: WARNING_FRAME, decay: 28, amp: 16 },
+  { start: CLICK_FRAME, decay: 20, amp: 10 },
+];
 
 /** Bundle-driven fallback act for beats with an unregistered role. */
 const GenericBeat: FC<PromoSceneProps> = ({ beat, brief }) => (
@@ -70,7 +81,7 @@ const RENDERERS: Record<PromoRole, FC<PromoSceneProps>> = {
 /**
  * Per-beat stage: a horizontal wipe-in and a fade-out. The incoming beat slides
  * from the right while fading up; the outgoing beat fades through the backdrop,
- * producing a clean fade-through cut that rides the camera punch on each cut.
+ * producing a clean fade-through cut.
  */
 const BeatStage: FC<{ beat: PromoBeat; children: ReactNode }> = ({ beat, children }) => {
   const frame = useCurrentFrame();
@@ -81,7 +92,7 @@ const BeatStage: FC<{ beat: PromoBeat; children: ReactNode }> = ({ beat, childre
   return (
     <AbsoluteFill
       style={{
-        transform: `translateX(${(1 - inP) * 90 - outP * 110}px) scale(${1 + 0.012 * (1 - outP)})`,
+        transform: `translateX(${(1 - inP) * 90 - outP * 110}px)`,
         opacity: inP * (1 - outP),
       }}
     >
@@ -96,65 +107,26 @@ export interface PromoVideoProps {
 
 /**
  * 16:9 widescreen commercial engine for the Edvano promo. Stitches the bundled
- * beats into one timeline: shared light-theme backdrop, a global camera rig
- * driven by the beat cues, per-beat transitions and a paper-grain grade.
+ * beats into one timeline: a static light-theme backdrop (hue evolves per beat),
+ * a rock-solid camera with two authored impact shakes, per-beat transitions, a
+ * static paper-grain grade, and a synchronized SFX + ambient audio bed.
  */
 export const PromoVideo: FC<PromoVideoProps> = ({ projectId = DEFAULT_PROJECT_ID }) => {
   const frame = useCurrentFrame();
   const project = useMemo(() => loadProject(projectId), [projectId]);
   const brief = useMemo(() => buildPromoBrief(project), [project]);
 
-  const { punches, shakes, glitchFrame } = useMemo(() => {
-    const p: PunchTrigger[] = [];
-    const s: ShakeTrigger[] = [];
-    let glitch = -1;
-    for (const cue of globalCues(brief)) {
-      switch (cue.kind) {
-        case "cut":
-          p.push({ start: cue.frame, decay: 12, amount: 0.05 });
-          break;
-        case "glitch":
-          glitch = cue.frame;
-          p.push({ start: cue.frame, decay: 16, amount: 0.1 });
-          s.push({ start: cue.frame, decay: 30, amp: 16 });
-          break;
-        case "score":
-          p.push({ start: cue.frame, decay: 16, amount: 0.11 });
-          break;
-        case "switch":
-          p.push({ start: cue.frame, decay: 8, amount: 0.03 });
-          break;
-        case "click":
-          p.push({ start: cue.frame, decay: 10, amount: 0.05 });
-          break;
-        case "reveal":
-          p.push({ start: cue.frame, decay: 20, amount: 0.13 });
-          s.push({ start: cue.frame, decay: 24, amp: 9 });
-          break;
-      }
-    }
-    return { punches: p, shakes: s, glitchFrame: glitch };
-  }, [brief]);
-
-  const cam = cameraFrame(frame, {
-    seed: "promo",
-    punches,
-    shakes,
-    rollDeg: 1.5,
-    panX: 14,
-    panY: 18,
-  });
-  const shakeAmp = Math.hypot(shakeOffset(frame, shakes).x, shakeOffset(frame, shakes).y);
-
-  const alarm = glitchFrame >= 0 ? dampedImpulse(frame - glitchFrame, 26) : 0;
+  const shake = shakeOffset(frame, SHAKES);
+  const shakeAmp = Math.hypot(shake.x, shake.y);
+  const alarm = dampedImpulse(frame - WARNING_FRAME, 26);
 
   return (
     <AbsoluteFill style={{ backgroundColor: brief.palette.background, fontFamily: brief.fontFamily }}>
-      <PromoBackdrop brief={brief} alarm={alarm} camX={cam.x} camY={cam.y} />
+      <PromoBackdrop brief={brief} alarm={alarm} camX={shake.x} camY={shake.y} />
 
       <AbsoluteFill
         style={{
-          transform: `translate(${cam.x}px, ${cam.y}px) rotate(${cam.roll}deg) scale(${cam.zoom})`,
+          transform: `translate(${shake.x}px, ${shake.y}px) rotate(${shake.rot}deg)`,
           willChange: "transform",
         }}
       >
@@ -174,14 +146,17 @@ export const PromoVideo: FC<PromoVideoProps> = ({ projectId = DEFAULT_PROJECT_ID
         })}
       </AbsoluteFill>
 
-      {/* Grade: paper grain + reactive chromatic vignette on heavy shake. */}
-      <PaperGrain opacity={0.06} blend="soft-light" />
+      {/* Grade: static paper grain + impact-reactive vignette. */}
+      <PaperGrain opacity={0.06} blend="soft-light" animate={false} />
       <AbsoluteFill
         style={{
           background: `radial-gradient(120% 95% at 50% 46%, rgba(15,23,42,0) 58%, rgba(15,23,42,${(0.06 + Math.min(0.05, shakeAmp * 0.004)).toFixed(3)}) 100%)`,
           pointerEvents: "none",
         }}
       />
+
+      {/* Ambient music bed (silent videos are forbidden). */}
+      <PlayMusic id="ambient_light" volume={0.5} loop />
     </AbsoluteFill>
   );
 };

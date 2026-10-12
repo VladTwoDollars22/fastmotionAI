@@ -8,8 +8,9 @@ import {
 import { KineticText } from "../../components/ui/KineticText";
 import { ParticleBurst } from "../../components/ui/ParticleBurst";
 import { dampedImpulse, smoothstep } from "../../utils/kinetics";
+import { PlaySfx, PlaySfxTrack, type SfxCue } from "../../utils/audioLibrary";
 import { progressBetween, withAlpha, type PromoSceneProps } from "./brief";
-import { OFFER_T, beatClock } from "./timeline";
+import { OFFER_T, TRANSITION_FRAMES, beatClock } from "./timeline";
 
 const MODAL = { left: 500, top: 322, width: 920, height: 524 };
 const PAD = 58;
@@ -152,6 +153,16 @@ export const OfferScene: FC<PromoSceneProps> = ({ beat, brief }) => {
   const success = frame >= successAt;
   const successPop = dampedImpulse(frame - successAt, 22);
   const cursorVisible = frame >= cursorAt - 2;
+
+  // Soft keyboard typing: a quiet tick every 3 frames across both autofill spans.
+  const typingCues: SfxCue[] = [];
+  const pushTyping = (from: number, to: number) => {
+    for (let f = from; f <= to; f += 3) {
+      typingCues.push({ id: "ticker", frame: f, volume: 0.26, pitch: (f % 5) - 2 });
+    }
+  };
+  pushTyping(type1, type1End);
+  pushTyping(type2, type2End);
 
   return (
     <AbsoluteFill style={{ fontFamily }}>
@@ -345,6 +356,17 @@ export const OfferScene: FC<PromoSceneProps> = ({ beat, brief }) => {
         outline="#FFFFFF"
         scale={1.15}
         opacity={cursorVisible ? 1 : 0}
+      />
+
+      {/* SFX: soft typing ticks + crisp "Записаться" click + success chime. */}
+      <PlaySfxTrack cues={typingCues} />
+      <PlaySfx id="click" frame={pressAt} volume={0.95} />
+      <PlaySfx id="chime" frame={successAt} volume={0.55} pitch={3} />
+      <PlaySfx
+        id="whoosh"
+        frame={Math.max(0, beat.durationInFrames - TRANSITION_FRAMES)}
+        volume={0.7}
+        pitch={2}
       />
     </AbsoluteFill>
   );

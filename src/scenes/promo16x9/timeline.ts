@@ -10,7 +10,7 @@ export const HOOK_T = {
   browserIn: 0,
   headline: 8,
   body: 34,
-  glitch: 58,
+  glitch: 60,
   glitchLen: 16,
 } as const;
 
@@ -38,9 +38,9 @@ export const OFFER_T = {
   field2: 108,
   type2: 112,
   type2End: 146,
-  button: 166,
-  press: 170,
-  success: 176,
+  button: 152,
+  press: 160,
+  success: 168,
 } as const;
 
 export const CTA_T = {

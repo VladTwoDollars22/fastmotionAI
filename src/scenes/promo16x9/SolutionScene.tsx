@@ -6,13 +6,14 @@ import { KineticText } from "../../components/ui/KineticText";
 import { RadialGauge } from "../../components/ui/RadialGauge";
 import { SegmentedPills } from "../../components/ui/SegmentedPills";
 import { dampedImpulse, smoothstep } from "../../utils/kinetics";
+import { PlaySfx, PlaySfxTrack, type SfxCue } from "../../utils/audioLibrary";
 import {
   lerpHsl,
   progressBetween,
   withAlpha,
   type PromoSceneProps,
 } from "./brief";
-import { SHOWCASE_T, beatClock } from "./timeline";
+import { SHOWCASE_T, TRANSITION_FRAMES, beatClock } from "./timeline";
 
 const CARD = { left: 1128, top: 208, width: 636, height: 664 };
 const GAUGE_SIZE = 400;
@@ -276,6 +277,25 @@ export const SolutionScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           })}
         </div>
       </div>
+
+      {/* SFX: rhythmic gauge ticking + snappy language-tab clicks + score chime. */}
+      <PlaySfx
+        id="ticker"
+        frame={tickStart}
+        durationInFrames={Math.max(1, tickEnd - tickStart)}
+        loop
+        volume={0.5}
+        pitch={-1}
+      />
+      <PlaySfxTrack
+        cues={switches.map<SfxCue>((f) => ({ id: "click", frame: f, volume: 0.6, pitch: 4 }))}
+      />
+      <PlaySfx id="chime" frame={tickEnd} volume={0.5} pitch={2} />
+      <PlaySfx
+        id="whoosh"
+        frame={Math.max(0, beat.durationInFrames - TRANSITION_FRAMES)}
+        volume={0.7}
+      />
     </AbsoluteFill>
   );
 };

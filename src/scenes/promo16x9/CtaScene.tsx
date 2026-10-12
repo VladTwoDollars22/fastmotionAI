@@ -4,7 +4,8 @@ import { AbsoluteFill, Img, spring, useCurrentFrame, useVideoConfig } from "remo
 import { KineticText } from "../../components/ui/KineticText";
 import { ParticleBurst } from "../../components/ui/ParticleBurst";
 import { LightSweep, SweepButton } from "../../components/ui/SweepButton";
-import { dampedImpulse, floatOffset, smoothstep } from "../../utils/kinetics";
+import { dampedImpulse, smoothstep } from "../../utils/kinetics";
+import { PlaySfx } from "../../utils/audioLibrary";
 import { progressBetween, withAlpha, type PromoSceneProps } from "./brief";
 import { CTA_T, beatClock } from "./timeline";
 
@@ -30,7 +31,6 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
   const revealEase = 1 - Math.pow(1 - reveal, 3);
   const pop = dampedImpulse(frame - revealEnd, 20);
   const badgeIn = spring({ frame: frame - at(CTA_T.badge), fps, config: springs.entrance });
-  const drift = floatOffset(frame, "cta-badge", 6, 8, 0.4);
   const logoScale = 0.4 + 0.6 * revealEase + 0.06 * pop;
   const logoRotate = (1 - revealEase) * -12;
   const glowPulse = 0.6 + 0.4 * Math.sin((frame / fps) * 2.2);
@@ -63,7 +63,7 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transform: `translate(${drift.x}px, ${drift.y}px) scale(${0.92 + 0.08 * badgeIn})`,
+          transform: `scale(${0.92 + 0.08 * badgeIn})`,
           opacity: badgeIn,
         }}
       >
@@ -202,6 +202,17 @@ export const CtaScene: FC<PromoSceneProps> = ({ beat, brief }) => {
           />
         </div>
       </div>
+
+      {/* SFX: energy sweep on the logo reveal + shimmer chimes on the button sweep. */}
+      <PlaySfx id="whoosh" frame={revealStart} volume={0.8} pitch={3} />
+      <PlaySfx id="chime" frame={burstAt} volume={0.5} pitch={5} />
+      <PlaySfx
+        id="chime"
+        frame={at(CTA_T.button)}
+        extraFrames={[at(CTA_T.button) + 46, at(CTA_T.button) + 92]}
+        volume={0.42}
+        pitch={7}
+      />
     </AbsoluteFill>
   );
 };

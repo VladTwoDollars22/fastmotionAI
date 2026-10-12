@@ -43,6 +43,7 @@
     "lint": "eslint src && tsc",
     "bundles": "node scripts/generate-bundles.mjs",
     "assets": "node scripts/generate-sample-assets.mjs",
+    "audio": "node scripts/generate-audio-library.mjs",
     "watch": "ts-node --project tsconfig.node.json scripts/watcher.ts",
     "predev": "npm run bundles",
     "prebuild": "npm run bundles"
