@@ -3,6 +3,142 @@
 import type { RawBundle } from "./projectLoader";
 
 export const BUNDLE_REGISTRY: Record<string, RawBundle> = {
+  "project_2026_10_12_freelance_chaos_to_order": {
+    "styleguide": {
+      "brand": "Chaos to Order",
+      "themeMode": "dark",
+      "aspect": "9:16",
+      "colors": {
+        "primary": "#FF5A5F",
+        "accent": "#FFD166",
+        "background": "#0E1330",
+        "text": "#FDF3E3",
+        "muted": "#8E9BC8"
+      },
+      "fonts": {
+        "heading": "Inter",
+        "body": "Inter"
+      },
+      "motion": {
+        "speed": "fast",
+        "transition": "fade"
+      },
+      "threePreset": "particles",
+      "music": {
+        "src": null,
+        "volume": 0.3
+      },
+      "palette": {
+        "blobs": {
+          "coral": "#FF5A5F",
+          "electricBlue": "#3D7BFF",
+          "amber": "#FFB703",
+          "mint": "#2EC4B6",
+          "violet": "#8E5CFF"
+        },
+        "problem": {
+          "crimson": "#FF2E4D",
+          "nearBlack": "#0A0A12"
+        },
+        "resolution": {
+          "gold": "#FFD166",
+          "cream": "#FDF3E3"
+        }
+      },
+      "motionPresets": {
+        "entranceBounce": {
+          "damping": 12,
+          "stiffness": 180
+        },
+        "smoothSettle": {
+          "damping": 200
+        },
+        "snappyAccent": {
+          "damping": 20,
+          "stiffness": 300
+        }
+      }
+    },
+    "content": {
+      "meta": {
+        "title": "Freelance: Chaos to Order",
+        "fps": 30,
+        "width": 1080,
+        "height": 1920
+      },
+      "scenes": [
+        {
+          "id": "chaos",
+          "type": "three",
+          "durationInFrames": 240,
+          "headline": "Chaos",
+          "body": "Five blobs, five directions, one tangled knot.",
+          "media": null,
+          "sfx": [
+            {
+              "src": "pop",
+              "atFrame": 0,
+              "volume": 0.82,
+              "duck": true
+            },
+            {
+              "src": "whoosh",
+              "atFrame": 60,
+              "volume": 0.78,
+              "duck": true
+            },
+            {
+              "src": "glitch_rumble",
+              "atFrame": 150,
+              "volume": 0.85,
+              "duck": true
+            }
+          ],
+          "transitionOut": "fade"
+        },
+        {
+          "id": "order",
+          "type": "three",
+          "durationInFrames": 240,
+          "headline": "Order",
+          "body": "One golden hero, one clear checkmark.",
+          "media": null,
+          "sfx": [
+            {
+              "src": "hush_reverse",
+              "atFrame": 0,
+              "volume": 0.76,
+              "duck": true
+            },
+            {
+              "src": "shimmer_merge",
+              "atFrame": 90,
+              "volume": 0.8,
+              "duck": true
+            },
+            {
+              "src": "click_chime",
+              "atFrame": 180,
+              "volume": 0.86,
+              "duck": true
+            }
+          ],
+          "transitionOut": "fade"
+        }
+      ],
+      "cta": "",
+      "voiceover": null
+    },
+    "prompt": "Title: Freelance: Chaos to Order\nGoal: Show five freelancers pulling one shared task in five directions, then merging into a single ordered, on-brand delivery.\n\nTone: playful, kinetic, tactile; snappy easing with overshoot, squash-and-stretch, gooey metaball morphing, paper-grain texture. Flat-vector 2D motion graphics, clean edges.\n\nEnergy: punchy -> motion.speed fast\n\nMust-have beats:\n- Scene 1 CHAOS (0-8s / 240 frames): five amorphous blob characters (Coral + stylus, Electric Blue + brackets, Amber + megaphone, Mint + pencil, Violet + bar chart) bounce in with heavy squash-and-stretch and grab a central 2D task card. Mismatched speech bubbles pop, collide and crack; blobs argue and stretch the card in five directions; camera micro-shake; card glitches with an RGB-split. The card cracks open and a dark, spiky, crimson-edged tangled knot bursts out and fills the frame as the blobs shrink to the corners.\n- Scene 2 ORDER (8-16s / 240 frames): sudden silence; a thin gold line draws across the frame and freezes the crimson problem; the line grows into a glowing Hero figure; the five blobs reach in, spiral and metaball-merge into ONE luminous entity with five color streams and a gold core; the entity unties the knot; the mass shrinks and snaps into a glowing gold checkmark with a small rising graph; smooth pull-back camera.\n- Persistent brand pill: \"Chaos to Order\".\n\nCTA: (none supplied in brief)\n\nBanned: (none specified)\n\nNotes: Scene-relative SFX cues (30 fps): Scene 1 pop@0, whoosh@60, glitch_rumble@150; Scene 2 hush_reverse@0, shimmer_merge@90, click_chime@180. These are the brief-authoritative cue names; deterministic placeholder WAVs for all six live in sources/audio/sfx/ so every cue resolves (hush_reverse, glitch_rumble, shimmer_merge, click_chime are descriptive names rather than rules/03 catalog roles, because none of the catalog names fit; documented deviation).\n\nRENDER/ENGINEER NOTES (supersedes earlier producer scaling):\n1. Duration restored to the brief's 240+240 = 480 frames (16s @ 30 fps). Root.tsx now resolves composition duration dynamically via calculateMetadata from the loaded bundle, so this bundle renders 480 frames while other bundles keep their own totals (rule 01 section 5 allows an explicitly documented duration change).\n2. Folder id: bundle id is project_2026_10_12_freelance_chaos_to_order (rules/05 section 3 date stamp). The brief's literal name project_freelance_chaos_to_order is not used.\n3. Scene types remain \"three\" (hero beats) with threePreset \"particles\"; scene visuals are implemented as deterministic frame-driven SVG graphic components (ChaosScene/OrderScene) bound to the bundle via projectLoader.\n4. Soft Cream had no hex in the brief; text color \"#FDF3E3\" is a derived near-white cream with strong contrast on #0E1330. primary/accent/text/muted map the brief's Coral/Gold/cream/neutral; the full brief palette is preserved in styleguide.json under \"palette\".\n",
+    "files": [
+      "sources/audio/sfx/click_chime.wav",
+      "sources/audio/sfx/glitch_rumble.wav",
+      "sources/audio/sfx/hush_reverse.wav",
+      "sources/audio/sfx/pop.wav",
+      "sources/audio/sfx/shimmer_merge.wav",
+      "sources/audio/sfx/whoosh.wav"
+    ]
+  },
   "_template": {
     "styleguide": {
       "brand": "Aurora",

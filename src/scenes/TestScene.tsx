@@ -18,7 +18,7 @@ export const DEFAULT_PROJECT_ID = "_template";
 
 export type MainVideoProps = { projectId?: string };
 
-const SceneOverlay: FC<{
+export const SceneOverlay: FC<{
   scene: ProjectScene;
   start: number;
   project: LoadedProject;
