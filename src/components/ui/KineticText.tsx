@@ -1,3 +1,4 @@
+import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 
@@ -17,6 +18,9 @@ export interface KineticTextProps {
   stiffness?: number;
   rotate?: number;
   distance?: number;
+  motionBlur?: number;
+  ambient?: number;
+  seed?: string;
 }
 
 const splitText = (text: string, mode: KineticMode): string[] =>
@@ -31,10 +35,13 @@ export const KineticText: FC<KineticTextProps> = ({
   style,
   unitStyle,
   entry = "up",
-  damping = 14,
-  stiffness = 170,
+  damping = 12,
+  stiffness = 220,
   rotate = 0,
   distance = 54,
+  motionBlur = 0,
+  ambient = 0.02,
+  seed = "kinetic",
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -62,15 +69,24 @@ export const KineticText: FC<KineticTextProps> = ({
         const isLast = index === units.length - 1;
         const content = mode === "letter" && unit === " " ? "\u00A0" : unit;
 
-        const offsetY = entry === "up" ? (1 - progress) * distance : 0;
-        const scale =
+        const blur = motionBlur * Math.max(0, 1 - progress);
+        const ambientScale =
+          1 + ambient * noise2D(`${seed}-s${index}`, frame * 0.07, index);
+        const ambientY =
+          ambient * 10 * noise2D(`${seed}-y${index}`, frame * 0.05, index * 1.7);
+        const ambientRot =
+          ambient * 45 * noise2D(`${seed}-r${index}`, frame * 0.04, index * 2.3);
+
+        const baseScale =
           entry === "pop"
             ? 0.55 + 0.45 * progress
             : entry === "scale"
               ? 0.7 + 0.3 * progress
               : 0.94 + 0.06 * progress;
+        const offsetY =
+          (entry === "up" ? (1 - progress) * distance : 0) + ambientY;
         const perUnitRotate =
-          rotate * (1 - progress) * (index % 2 === 0 ? -1 : 1);
+          rotate * (1 - progress) * (index % 2 === 0 ? -1 : 1) + ambientRot;
 
         return (
           <span
@@ -79,7 +95,8 @@ export const KineticText: FC<KineticTextProps> = ({
               display: "inline-block",
               whiteSpace: "pre",
               opacity: Math.min(1, Math.max(0, progress)),
-              transform: `translateY(${offsetY}px) scale(${scale}) rotate(${perUnitRotate}deg)`,
+              transform: `translateY(${offsetY}px) scale(${baseScale * ambientScale}) rotate(${perUnitRotate}deg)`,
+              filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
               transformOrigin: "50% 80%",
               marginRight: mode === "word" && !isLast ? "0.3em" : undefined,
               ...unitStyle,

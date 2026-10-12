@@ -1,104 +1,87 @@
-# 03 — Audio & SFX Rules
+# 03 — Audio & SFX Rules (Cinematic Edition)
 
-Audio must be frame-accurate and stable across renders. Never rely on the host
-audio clock, timers, or the Web Audio API's real-time scheduling.
+Audio must be frame-accurate, stable across renders, and **cinematic** — a layered
+sound design, never an afterthought. Never use the host audio clock, timers, or the
+Web Audio API's real-time scheduling.
 
 ## 1. Loading audio
 
 - Use Remotion primitives only: `<Audio>`, `<Video>`'s audio, and `staticFile()`.
-- Local, generated, or downloaded assets must be referenced with `staticFile()`
-  (place shared SFX in `src/assets/audio/sfx/`, music in `src/assets/audio/music/`).
-- Analyze waveform/beat info with `@remotion/media-utils`
-  (`getAudioData`, `getAudioDurationInSeconds`, `useAudioData`) — these run
-  deterministically during rendering.
-- Local fonts/assets under `public/` are addressed through `staticFile()`; do not use
-  OS file paths.
+- Local/generated/downloaded assets are referenced via `staticFile()`; bundle-local
+  SFX live in `sources/audio/sfx/` (shared library: `src/assets/audio/sfx/`,
+  music: `src/assets/audio/music/`).
+- Analyze waveform/beat info with `@remotion/media-utils` (`getAudioData`,
+  `getAudioDurationInSeconds`, `useAudioData`) — deterministic during rendering.
 
 ## 2. Frame-accurate SFX triggers
 
-- SFX are positioned with `<Sequence from={frame}>` wrapping an `<Audio>`; Remotion
-  converts frames→seconds using the composition `fps` (30). Never hardcode seconds.
-- Trigger frames must be integers. If an event lands mid-frame, snap it to the
-  nearest frame and log the delta.
-- Volume fades are frame-driven:
+- Position SFX with `<Sequence from={int}>` wrapping `<Audio>`; Remotion converts
+  frames→seconds using `fps` (30). Never hardcode seconds.
+- Trigger frames are integers; snap mid-frame values and log the delta.
+- Volume fades are frame-driven (`interpolate` with clamped ends).
+- `sfx[].src` resolves (in order) from `sources/audio/sfx/`, `sources/sfx/`,
+  `sources/audio/`; a name containing `/` or an extension is an exact path.
 
-```tsx
-const frame = useCurrentFrame();
-const gain = interpolate(frame, [from, from + 6], [0, 1], {
-  extrapolateLeft: "clamp",
-  extrapolateRight: "clamp",
-});
-<Sequence from={from}>
-  <Audio src={staticFile("audio/sfx/whoosh.mp3")} volume={gain} />
-</Sequence>
-```
+## 3. SFX catalog (extend, don't duplicate)
 
-- `sfx[].src` names in `content.json` resolve to files in `src/assets/audio/sfx/`
-  (extension optional; prefer `.wav` for sharp transients, `.mp3` for beds).
-- Common triggers: `whoosh` (transitions), `pop` (UI), `click`, `riser`, `impact`,
-  `sparkle`. Reuse the shared library; do not add one-off duplicates.
+Core: `whoosh` (transitions), `pop` (UI), `click`, `ding`, `riser`, `impact`, `sparkle`.
+Cinematic additions used by the producer: `glitch_rumble` (sub-bass impact),
+`hush_reverse` (pre-drop mute), `shimmer_merge` (fluid merge payoff),
+`click_chime` (resolution chime), `tick` (typing/typo cascade), `sub_drop`.
 
-## 3. SFX catalog
-
-Keep a manifest `src/assets/audio/sfx/index.ts` exporting a typed map of name → file
-and recommended default gain, so scenes reference names, not paths.
+Keep a typed manifest in `src/assets/audio/sfx/index.ts` (name → file + default gain).
 
 ## 4. Audio ducking (music under narration/SFX)
 
-Ducking lowers the music bed while a voice/SFX bus is active. Implement it
-deterministically, in frames — never with real-time audio nodes.
-
-Rules:
-- Music is a full-length `<Audio>` at the composition root with a base
-  `volume` from `styleguide.json` (typically `0.25–0.4`).
-- Build a per-frame gain envelope for the music:
-  1. Start at `musicBase`.
-  2. For each duck window, ramp down to `musicBase * duckFactor`
-     (`duckFactor ≈ 0.25–0.4`) over an attack of ~4–8 frames.
-  3. Hold while the voice/SFX is active.
-  4. Release back to `musicBase` over ~10–20 frames.
-- Prefer `interpolate`/`interpolateColors`-style envelopes built from arrays of duck
-  windows, or sum contributions from each window, then clamp to `[0, musicBase]`.
-
-```tsx
-// src/components/audio/useDucking.ts  (shared helper)
-export const musicGain = (frame: number, base: number, windows: DuckWindow[]) => {
-  let gain = base;
-  for (const w of windows) {
-    const env = interpolate(
-      frame,
-      [w.start - 6, w.start, w.end, w.end + 14],
-      [base, base * w.factor, base * w.factor, base],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-    );
-    gain = Math.min(gain, env); // duck to the deepest active window
-  }
-  return gain;
-};
-```
-
-- Duck windows come from `content.json` (`sfx[].atFrame` + duration) and from any
-  narration track. Round all frames to integers.
-- Never exceed total clip length; duck release must finish before the music ends or
-  fade the music out over the last ~15 frames.
+- Music is a full-length `<Audio>` at the composition root; base volume from
+  `styleguide.json` (`0.25–0.4`).
+- Build a per-frame gain envelope: attack ~4–8 frames, hold, release ~10–20 frames,
+  taking the **minimum** across all active duck windows; clamp to `[0, musicBase]`.
+- Duck windows come from `content.json` (`sfx[].atFrame` + duration, `duck: true`) and
+  from the voiceover track. Round all frames to integers.
+- Release must finish before the music ends, or fade the music out over the last ~15 frames.
 
 ## 5. Mixing levels (starting point)
 
-| Bus        | Level          |
-| ---------- | -------------- |
-| Music base | 0.30           |
-| Music duck | 0.08 (≈27%)    |
-| SFX        | 0.70–0.90      |
-| Narration  | 1.00           |
+| Bus | Level |
+| --- | ----- |
+| Music base | 0.30 |
+| Music duck | 0.08 (≈27%) |
+| SFX | 0.70–0.90 |
+| Sub-bass impact | 0.85–0.95 |
+| Narration | 1.00 |
 
-- Normalize loud SFX to ~−6 dBFS-sourced assets; don't clip by stacking.
-- One loud transient per 4–6 frames maximum; cull duplicate triggers within that window.
+- Normalize loud SFX to ~−6 dBFS; never clip by stacking.
+- Max one loud transient per 4–6 frames; cull duplicates.
 
-## 6. Determinism & QA
+## 6. Cinematic Audio Architecture (MANDATORY layering)
+
+Sound design is a **layer stack** aligned to the visual beat sheet. Every scene MUST
+schedule (as the bundle's assets allow):
+
+1. **Sub-bass impact sweep on scene cuts** — a low `impact`/`glitch_rumble`/`sub_drop`
+   on every hard cut, morph, and explosion; place exactly on the cut frame.
+2. **High-frequency UI tick/pop cascade on kinetic text** — one `tick`/`pop` per
+   character or word entrance (stagger matches the visual stagger, e.g. every 2–4 frames),
+   volume tapering across the cascade; a `ding`/`click_chime` on the resolved word.
+3. **Ambient tension risers** — a `riser`/`hush_reverse` leading into each hero reveal,
+   peaking on the impact frame (reverse-swell = silence-then-hit).
+4. **Crystal-clear chime resolutions** — `click_chime`/`shimmer_merge` on the payoff
+   (checkmark, merge complete, final headline).
+
+Layering rules:
+- Align every layer to integer frames; derive them from `content.json` beats so the
+  design stays automated (no hand-placed timings that drift when the bundle changes).
+- Keep the low/mid/high bands from masking: duck music under impacts and narration.
+- The final frame must resolve (chime/release), never cut mid-riser.
+
+## 7. Determinism & QA
 
 - [ ] No real-time audio scheduling, timers, or `AudioContext`.
 - [ ] All triggers via `<Sequence from={int}>` at 30 fps.
-- [ ] Volume envelopes are `interpolate`-based and clamped.
-- [ ] Every `sfx` reference resolves in the catalog; missing files fail the build.
+- [ ] Volume envelopes `interpolate`-based and clamped.
+- [ ] Every `sfx` reference resolves; missing files fail the build.
+- [ ] Cinematic layers present: sub-bass on cuts, tick/pop cascades on text,
+      riser into reveals, chime on resolution (§6).
 - [ ] Music does not exceed clip length; fade-in ~10 frames, fade-out ~15 frames.
 - [ ] Duck release completes before the composition ends.

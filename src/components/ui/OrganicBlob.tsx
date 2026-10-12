@@ -14,6 +14,7 @@ export interface OrganicBlobProps {
   opacity?: number;
   delay?: number;
   glow?: number;
+  spin?: number;
   style?: CSSProperties;
 }
 
@@ -55,11 +56,13 @@ export const OrganicBlob: FC<OrganicBlobProps> = ({
   opacity = 1,
   delay = 0,
   glow = 0,
+  spin = 4,
   style,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const time = frame / fps;
+  const rotation = (spin * time * Math.PI) / 180;
 
   const appear = spring({
     frame: Math.max(0, frame - delay),
@@ -80,7 +83,7 @@ export const OrganicBlob: FC<OrganicBlobProps> = ({
     );
     const radius =
       r * (1 + wobble * ripple + wobble * 0.5 * ring) * (0.55 + 0.45 * appear);
-    pts.push(pointAt(cx, cy, angle, radius));
+    pts.push(pointAt(cx, cy, angle + rotation, radius));
   }
 
   return (

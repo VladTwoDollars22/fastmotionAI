@@ -1,91 +1,89 @@
-# 04 — Three.js / React Three Fiber Standards
+# 04 — Three.js / React Three Fiber Standards (Studio Edition)
 
-3D lives in `src/components/3d/`. Everything must render deterministically inside
-Remotion's frame loop and stay performance-safe for headless rendering.
+3D lives in `src/components/3d/`. Everything renders deterministically inside Remotion's
+frame loop and stays performance-safe for headless rendering — while delivering
+cinematic camera work and fluid morphs. Read with `rules/01` §7–§8.
 
 ## 1. Renderer & scene setup
 
-- Use `@react-three/fiber` (`<Canvas>`) + `@react-three/drei` helpers. Do not create
-  a raw `WebGLRenderer`/`THREE.Scene` by hand unless a drei helper can't do it.
-- Set the renderer explicitly for headless Chrome:
-  - `gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}`
-  - `dpr={[1, 2]}` (cap device pixel ratio; never `window.devicePixelRatio`).
-  - `frameloop="never"` and drive renders from Remotion's frame, OR call
-    `invalidate()` / use `useThree(state => state.invalidate)` — the scene must NOT
-    run its own `requestAnimationFrame` loop independent of the timeline.
-- Drive animation from `useCurrentFrame()` exactly like 2D (rule 01). Rotate/scale/
-  move objects as a function of `frame`, not `delta` from a continuous clock.
+- Use `@react-three/fiber` (`<Canvas>`) + `@react-three/drei` helpers.
+- Headless-safe renderer config:
+  - `gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}`
+    (post-processing handles AA; see §5).
+  - `dpr={1}` for full-frame field canvases (cap ≤ 2 for small hero canvases).
+  - `frameloop="never"` + explicit per-frame `gl.render()` for plain scenes; use
+    `frameloop="always"` **only** when an `EffectComposer` is present (the composer
+    renders via its own `useFrame`). Either way, all *state* is driven by `frame`.
+- Drive animation from `useCurrentFrame()`; object transforms are functions of `frame`,
+  never `delta` from a continuous clock.
 
-```tsx
-const frame = useCurrentFrame();
-const t = frame / fps;
-group.current.rotation.y = t * Math.PI * 0.5;
-```
+## 2. Camera choreography (mandatory)
 
-## 2. Cameras
+Every 3D scene performs active, frame-driven camera work:
 
-- Default: `<PerspectiveCamera makeDefault fov={35} position={[0, 0, 6]} />`.
-- Prefer a small FOV (30–45) for a "product/film" look; avoid wide distortion.
-- Camera moves must be frame-bound and eased (use `interpolate`/`spring` outputs to
-  set position/rotation), never mouse- or scroll-driven.
-- Use `<OrthographicCamera>` only for flat/isometric graphic looks; document why.
-- Always set `near`/`far` tightly (e.g. `near: 0.1, far: 100`) to protect depth precision.
-- Reference framing: the target is 1080x1920; ensure the subject stays centered for a
-  9:16 crop. Test the vertical fit, not just a 16:9 monitor view.
+- **Zoom-punch**: spring the camera `z`/`fov` (e.g. `z: 9 → 7 → 9`) on reveals.
+- **Camera roll/tilt**: continuous or springy `rotation.z` (±0.5°–3°); small `rotation.x/y`
+  drift via `noise2D`.
+- **Dolly through Z on morphs**: ease `z` from `9` toward `3` and back so the particle
+  field rushes past the lens during a 2D→3D collapse.
+- **Impact shake**: decaying noise jitter on `camera.position` on heavy beats.
+- Prefer a small FOV (30–45) for a film look; keep `near`/`far` tight. Framing is
+  judged on the 1080x1920 vertical crop.
 
-## 3. Lighting
+## 3. Lighting & materials
 
-- Keep the light rig minimal and intentional (1 key + 1 fill + optional rim/HDRI).
-- Prefer `drei` helpers: `<Environment preset="city" />` (or a local `.hdr` from
-  `sources/three/`) for realistic reflections; `<ContactShadows>` for grounded looks.
-- Shadow maps are expensive in headless renders. If used:
-  - One shadow-casting light only; `shadow-mapSize={[1024, 1024]}` max.
-  - Set `shadow-camera` bounds tightly around the subject.
-- Match light color/temperature to `styleguide.json` colors for brand cohesion.
-- No animated light flicker unless frame-bound and clamped.
+- Minimal rig: 1 key + 1 fill + optional rim/HDRI. Match color temperature to
+  `styleguide.json`. Shadow maps are expensive — ≤ 1 caster, `mapSize` ≤ 1024.
+- Prefer `MeshStandardMaterial`/`MeshPhysicalMaterial`; avoid `transmission` (extra
+  full-res pass). Emulate glass with `transparent` + low `roughness` + `clearcoat` + `emissive`.
+- Assets (`sources/three/`) load via `useGLTF`/`useTexture` with `staticFile()` URLs and
+  `.preload()`.
 
-## 4. Materials & assets
+## 4. Fluid 2D→3D morphing & particle systems
 
-- Prefer `MeshStandardMaterial` / `MeshPhysicalMaterial`; use `drei`'s
-  `useGLTF`/`useTexture`/`useCubeTexture` for assets in `sources/three/`.
-- `useGLTF` and `useTexture` must be given paths via `staticFile()`/absolute public
-  URLs so headless rendering can fetch them.
-- Preload: `useGLTF.preload(url)`, `useTexture.preload(url)` for assets used early.
-- Keep texture sizes ≤ 2048²; generate mipmaps; use `.basis`/`.ktx2` only if the
-  loader is configured.
-- Draco/meshopt-compressed `.glb` must have the matching decoder configured once at
-  the scene root.
+- **Flat→particle collapse**: represent the outgoing 2D element as sampled points in a
+  `<points>` cloud; disperse, then re-gather into the next element's targets. Interpolate
+  positions by `frame` with easing; no per-frame allocations (hoist buffers, `.set()`).
+- **Metaball blending** (2D): use a real goo filter (`feGaussianBlur` + `feColorMatrix`
+  alpha threshold + `feComposite`); converge all shape colors as they merge so the result
+  reads as one liquid body (see `src/components/ui/Metaballs.tsx`).
+- **Ambient particle fields**: additive `<points>` with `sizeAttenuation`, seeded
+  (`mulberry32`) positions, frame-driven group rotation + sine drift. Never static.
+- Use `THREE.AdditiveBlending` for glows/sparks; `depthWrite={false}` for particles.
 
-## 5. Performance budget (1080x1920, 30 fps, 300 frames)
+## 5. Post-processing pipeline (default when a hero 3D layer exists)
 
-- Target ≤ 60k triangles for hero scenes, ≤ 8 draw calls where practical.
-- Reuse geometries/materials across instances; use `drei`'s `<Instances>`/`<Merged>`
-  rather than N separate meshes.
-- Avoid per-frame allocations: no `new THREE.Vector3()` inside the render loop; hoist
-  and `.set()` instead.
-- Limit post-processing (`@react-three/postprocessing`) to 1 effect pass if used;
-  `EffectComposer` is optional, not default.
-- No physics engines unless required; if used, step a FIXED timestep derived from
-  `frame`, never variable `delta`, so output is reproducible.
-- Cap total pixel work: `dpr` ≤ 2, no `SMAAPass` + high `MSAA` together.
+Use `@react-three/postprocessing` with an `EffectComposer`:
 
-## 6. Integration with Remotion
+- `Bloom` (`mipmapBlur`, adaptive `intensity`, high `luminanceThreshold`) — glow/energy.
+- `ChromaticAberration` (`radialModulation`) — impact/science-fiction edge, animate the
+  offset with shake strength.
+- `Noise` (low `opacity`, `OVERLAY`) and `Vignette` — filmic texture and depth.
+- Set `multisampling={0}` (cheap), keep `dpr={1}`, and enable only the passes needed.
+- Post-processing FX must be frame-driven (offset/intensity/darkness change per beat),
+  and must not obscure the vertical safe area.
 
-- Mount `<Canvas>` inside `AbsoluteFill`; give it explicit width/height or `100%`.
-- The 3D layer may be composited with 2D `src/components/ui/` overlays.
-- Freeze time at `frame` before rendering: since Remotion renders a still per frame,
-  avoid continuous animations not tied to `frame`.
-- Provide a `Suspense` boundary + a frame-stable fallback (e.g. background color) so a
-  slow asset load never produces a mismatched frame.
-- Dispose of resources on unmount (`useEffect` cleanup) to avoid leaks across many
-  rendered frames, especially in the Studio preview.
+## 6. Performance budget (1080x1920, 30 fps, 300 frames)
 
-## 7. Determinism & QA
+- ≤ 60k triangles hero scenes; reuse geometry/materials; prefer `<Instances>`/`<Merged>`.
+- No per-frame allocations in the render loop (no `new THREE.Vector3()` per frame).
+- Cap pixel work: `dpr` ≤ 1 for full-frame composers; ≤ 2 otherwise; no MSAA + SMAA together.
+- Physics: only if required, fixed timestep derived from `frame`, never variable `delta`.
 
-- [ ] No independent RAF loop; timeline drives all motion.
-- [ ] `frameloop="never"` (or explicit `invalidate()` per frame).
-- [ ] All asset URLs resolved via `staticFile()`/public paths.
-- [ ] Lights/shadow map sizes within budget; ≤ 1 shadow caster.
+## 7. Integration with Remotion
+
+- Mount `<Canvas>` in `AbsoluteFill`; give it explicit size or `100%`.
+- Wrap asset-loading subtrees in `<Suspense>` with a **frame-stable fallback**
+  (background color) and an error boundary, so a slow/failed load never yields a blank frame.
+- Dispose resources on unmount. Composite 3D with 2D `src/components/ui/` overlays;
+  the 3D field normally sits in the **background Z-layer** (rule 01 §7).
+
+## 8. Determinism & QA
+
+- [ ] Timeline drives all motion; no independent RAF loop (except the composer's required loop).
+- [ ] Camera choreography present: zoom-punch + roll/tilt + dolly through Z + shake (§2).
+- [ ] ≥ 1 fluid morph (particle collapse or metaball) per transition (§4).
+- [ ] Ambient particle field is never static (group rotation + drift) (§4).
+- [ ] Post-processing frame-driven; `multisampling={0}`; `dpr` within budget (§5).
 - [ ] No per-frame allocations or unseeded randomness.
-- [ ] Scene fits the 1080x1920 vertical crop.
-- [ ] Suspense boundary + frame-stable fallback present.
+- [ ] Scene fits the 1080x1920 vertical crop; Suspense + fallback present.

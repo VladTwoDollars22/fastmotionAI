@@ -27,6 +27,24 @@ export interface StyleguideMusic {
   volume: number;
 }
 
+export interface StyleguidePalette {
+  blobs: Record<string, string> | null;
+  problem: Record<string, string> | null;
+  resolution: Record<string, string> | null;
+}
+
+export interface MotionPreset {
+  damping: number;
+  stiffness: number | null;
+  mass: number | null;
+}
+
+export interface StyleguideMotionPresets {
+  entranceBounce: MotionPreset | null;
+  smoothSettle: MotionPreset | null;
+  snappyAccent: MotionPreset | null;
+}
+
 export interface Styleguide {
   brand: string;
   themeMode: ThemeMode;
@@ -35,6 +53,8 @@ export interface Styleguide {
   motion: StyleguideMotion;
   threePreset: ThreePreset;
   music: StyleguideMusic;
+  palette: StyleguidePalette | null;
+  motionPresets: StyleguideMotionPresets | null;
 }
 
 export interface SceneSfx {
@@ -125,6 +145,8 @@ export const DEFAULT_STYLEGUIDE: Styleguide = {
     src: null,
     volume: 0.3,
   },
+  palette: null,
+  motionPresets: null,
 };
 
 export const DEFAULT_CONTENT: ProjectContent = {
@@ -168,6 +190,27 @@ const asPreset = (value: unknown): ThreePreset =>
     ? value
     : "floating-cards";
 
+const sanitizeStringRecord = (value: unknown): Record<string, string> | null => {
+  if (!isObject(value)) return null;
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(value)) {
+    const entry = value[key];
+    if (typeof entry === "string") out[key] = entry;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+};
+
+const asMotionPreset = (value: unknown): MotionPreset | null => {
+  if (!isObject(value)) return null;
+  const damping = asNumber(value.damping, 0);
+  if (damping <= 0) return null;
+  return {
+    damping,
+    stiffness: typeof value.stiffness === "number" ? value.stiffness : null,
+    mass: typeof value.mass === "number" ? value.mass : null,
+  };
+};
+
 const safeRef = (ref: string): string | null => {
   const cleaned = ref.replace(/\\/g, "/").replace(/^\.?\//, "");
   if (cleaned.length === 0) return null;
@@ -193,6 +236,23 @@ export const normalizeStyleguide = (
   const fonts = isObject(raw.fonts) ? raw.fonts : {};
   const motion = isObject(raw.motion) ? raw.motion : {};
   const music = isObject(raw.music) ? raw.music : {};
+
+  const rawPalette = isObject(raw.palette) ? raw.palette : null;
+  const palette: StyleguidePalette | null = rawPalette
+    ? {
+        blobs: sanitizeStringRecord(rawPalette.blobs),
+        problem: sanitizeStringRecord(rawPalette.problem),
+        resolution: sanitizeStringRecord(rawPalette.resolution),
+      }
+    : null;
+  const rawPresets = isObject(raw.motionPresets) ? raw.motionPresets : null;
+  const motionPresets: StyleguideMotionPresets | null = rawPresets
+    ? {
+        entranceBounce: asMotionPreset(rawPresets.entranceBounce),
+        smoothSettle: asMotionPreset(rawPresets.smoothSettle),
+        snappyAccent: asMotionPreset(rawPresets.snappyAccent),
+      }
+    : null;
 
   return {
     brand: asString(raw.brand, DEFAULT_STYLEGUIDE.brand),
@@ -223,6 +283,8 @@ export const normalizeStyleguide = (
       src: asNullableString(music.src),
       volume: asNumber(music.volume, DEFAULT_STYLEGUIDE.music.volume),
     },
+    palette,
+    motionPresets,
   };
 };
 

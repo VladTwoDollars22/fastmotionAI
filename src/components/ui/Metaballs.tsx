@@ -1,4 +1,6 @@
+import { noise2D } from "@remotion/noise";
 import type { FC } from "react";
+import { useCurrentFrame } from "remotion";
 
 export interface GooFilterDefsProps {
   id: string;
@@ -37,6 +39,9 @@ export interface MetaballsProps {
   blobs: Metaball[];
   color?: string;
   opacity?: number;
+  wobble?: number;
+  seed?: string;
+  speed?: number;
 }
 
 export const Metaballs: FC<MetaballsProps> = ({
@@ -44,16 +49,27 @@ export const Metaballs: FC<MetaballsProps> = ({
   blobs,
   color = "#4F8CFF",
   opacity = 1,
-}) => (
-  <g filter={`url(#${id})`} fill={color} opacity={opacity}>
-    {blobs.map((blob, index) => (
-      <circle
-        key={index}
-        cx={blob.x}
-        cy={blob.y}
-        r={blob.r}
-        fill={blob.color ?? color}
-      />
-    ))}
-  </g>
-);
+  wobble = 0.08,
+  seed = "meta",
+  speed = 1,
+}) => {
+  const frame = useCurrentFrame();
+  const time = frame / 30;
+
+  return (
+    <g filter={`url(#${id})`} fill={color} opacity={opacity}>
+      {blobs.map((blob, index) => {
+        const ripple = 1 + wobble * noise2D(`${seed}-${index}`, time * speed, index);
+        return (
+          <circle
+            key={index}
+            cx={blob.x + noise2D(`${seed}-x${index}`, time * speed, 0.4) * 6}
+            cy={blob.y + noise2D(`${seed}-y${index}`, time * speed, 1.1) * 6}
+            r={blob.r * ripple}
+            fill={blob.color ?? color}
+          />
+        );
+      })}
+    </g>
+  );
+};

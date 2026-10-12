@@ -17,6 +17,7 @@ export interface ParticleBurstProps {
   lineLength?: number;
   size?: number;
   gravity?: number;
+  ring?: boolean;
 }
 
 export const ParticleBurst: FC<ParticleBurstProps> = ({
@@ -34,6 +35,7 @@ export const ParticleBurst: FC<ParticleBurstProps> = ({
   lineLength = 46,
   size = 4,
   gravity = 0,
+  ring = false,
 }) => {
   const frame = useCurrentFrame();
   const local = frame - delay;
@@ -83,5 +85,20 @@ export const ParticleBurst: FC<ParticleBurstProps> = ({
     }
   }
 
-  return <g style={{ mixBlendMode: "screen" }}>{items}</g>;
+  return (
+    <g style={{ mixBlendMode: "screen" }}>
+      {ring ? (
+        <circle
+          cx={x}
+          cy={y}
+          r={spread * 0.55 * Math.pow(progress, 0.5)}
+          fill="none"
+          stroke={color}
+          strokeWidth={7 * (1 - progress)}
+          opacity={Math.max(0, 1 - progress) * 0.7}
+        />
+      ) : null}
+      {items}
+    </g>
+  );
 };

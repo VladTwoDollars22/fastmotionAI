@@ -1,6 +1,7 @@
 import { noise2D } from "@remotion/noise";
 import type { CSSProperties, FC } from "react";
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { floatOffset } from "../../utils/kinetics";
 
 export interface GlowOverlayProps {
   color?: string;
@@ -9,6 +10,7 @@ export interface GlowOverlayProps {
   blur?: number;
   delay?: number;
   pulse?: number;
+  drift?: number;
   seed?: string | number;
   style?: CSSProperties;
   className?: string;
@@ -21,6 +23,7 @@ export const GlowOverlay: FC<GlowOverlayProps> = ({
   blur = 70,
   delay = 0,
   pulse = 1,
+  drift = 26,
   seed = "glow",
   style,
   className,
@@ -39,6 +42,7 @@ export const GlowOverlay: FC<GlowOverlayProps> = ({
   const n = 0.5 + 0.5 * noise2D(seed, frame * 0.03, 0);
   const scale = 1 + pulse * n * 0.2;
   const alpha = intensity * appear * (0.7 + 0.3 * n);
+  const offset = floatOffset(frame, `${seed}-drift`, drift, drift, 0.5);
 
   return (
     <AbsoluteFill
@@ -58,7 +62,7 @@ export const GlowOverlay: FC<GlowOverlayProps> = ({
           background: `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 62%)`,
           filter: `blur(${blur}px)`,
           opacity: alpha,
-          transform: `scale(${scale})`,
+          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
           mixBlendMode: "screen",
         }}
       />

@@ -1,6 +1,9 @@
 import "./index.css";
 import { Composition } from "remotion";
-import { ChaosOrderScene } from "./scenes/chaosOrder/ChaosOrderScene";
+import {
+  ChaosOrderScene,
+  FREELANCE_PROJECT_ID,
+} from "./scenes/chaosOrder/ChaosOrderScene";
 import { DEFAULT_PROJECT_ID, TestScene } from "./scenes/TestScene";
 
 export const RemotionRoot: React.FC = () => {
@@ -13,6 +16,7 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1080}
         height={1920}
+        defaultProps={{ projectId: FREELANCE_PROJECT_ID }}
       />
       <Composition
         id="TemplateVideo"

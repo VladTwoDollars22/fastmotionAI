@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import * as THREE from "three";
 import { mulberry32 } from "../../utils/prng";
-import { lerpHex } from "../../scenes/chaosOrder/theme";
+import { lerpHex } from "../../utils/kinetics";
 
 export interface BackgroundFieldProps {
   background?: string;
