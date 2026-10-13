@@ -50,6 +50,8 @@ export interface LaunchBrief {
   freelancers: string[];
   /** Node labels for the ecosystem beat, parsed from the brief chain (A -> B -> C). */
   ecosystemNodes: string[];
+  /** Ordered Scene-2 ecosystem columns (step badge + title + detail). */
+  ecosystemColumns: { step: string; title: string; detail: string }[];
   /** Node labels for the revenue funnel map (Website -> Funnel -> Telegram -> CRM). */
   funnelNodes: string[];
   /** Incoming-deal counter steps for the founder beat. */
@@ -106,6 +108,19 @@ const splitList = (value: string, pattern: RegExp): string[] =>
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 
+/** Parse ordered "NN | Title | Detail" columns from the brief (Scene 2). */
+const parseColumns = (
+  text: string,
+): { step: string; title: string; detail: string }[] => {
+  const re = /^(\d{2})\s*\|\s*([^|\n]+?)\s*\|\s*(.+)$/gm;
+  const out: { step: string; title: string; detail: string }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    out.push({ step: match[1], title: match[2].trim(), detail: match[3].trim() });
+  }
+  return out;
+};
+
 export const buildLaunchBrief = (project: LoadedProject): LaunchBrief => {
   const { styleguide, content, prompt } = project;
   const tokens = styleguide.palette?.tokens ?? {};
@@ -153,6 +168,16 @@ export const buildLaunchBrief = (project: LoadedProject): LaunchBrief => {
     ? splitList(funnelMatch[0], /\s*->\s*/)
     : splitList(engineHeadline, /\s*[•·|]\s*/);
 
+  const parsedColumns = parseColumns(prompt);
+  const ecosystemColumns =
+    parsedColumns.length > 0
+      ? parsedColumns
+      : ecosystemNodes.map((node, i) => ({
+          step: String(i + 1).padStart(2, "0"),
+          title: node,
+          detail: "",
+        }));
+
   const pushMatch = prompt.match(/\$\s?[\d][\d.,]*/);
   const pushAmount = pushMatch ? pushMatch[0].replace(/\s/g, "") : "$1,500";
 
@@ -195,6 +220,7 @@ export const buildLaunchBrief = (project: LoadedProject): LaunchBrief => {
     freelancers: freelancers.length > 0 ? freelancers : ["Designer", "Copy", "Ads", "Dev", "CRM"],
     ecosystemNodes:
       ecosystemNodes.length > 1 ? ecosystemNodes : ["Next.js 16 Web", "Meta CAPI", "Lead Funnel", "CRM"],
+    ecosystemColumns,
     funnelNodes:
       funnelNodes.length > 1 ? funnelNodes : ["Website", "Funnel", "Telegram", "CRM"],
     deals,

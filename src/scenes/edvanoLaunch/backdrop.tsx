@@ -62,6 +62,21 @@ const LaunchBackdropImpl: FC<LaunchBackdropProps> = ({ brief, alarm = 0, energy 
         }}
       />
 
+      {/* Glowing indigo/cyan aura waves (smooth sine drift). */}
+      <div
+        style={{
+          position: "absolute",
+          inset: -160,
+          background: `radial-gradient(30% 34% at ${24 + 8 * Math.sin(frame * 0.007)}% ${
+            30 + 6 * Math.cos(frame * 0.006)
+          }%, ${withAlpha(palette.primary, 0.16)} 0%, rgba(255,255,255,0) 60%),
+            radial-gradient(28% 32% at ${74 + 8 * Math.cos(frame * 0.005)}% ${
+              40 + 6 * Math.sin(frame * 0.007)
+            }%, ${withAlpha(palette.cyan, 0.16)} 0%, rgba(255,255,255,0) 62%)`,
+          filter: "blur(2px)",
+        }}
+      />
+
       {/* Perspective grid floor. */}
       <div
         style={{
@@ -77,6 +92,41 @@ const LaunchBackdropImpl: FC<LaunchBackdropProps> = ({ brief, alarm = 0, energy 
           backgroundSize: "96px 96px",
           maskImage: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
           WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
+        }}
+      />
+
+      {/* Far glass grid (depth) + ceiling reflection for a 3D glass-box feel. */}
+      <div
+        style={{
+          position: "absolute",
+          left: "-30%",
+          right: "-30%",
+          bottom: "-20%",
+          height: "70%",
+          transform: `perspective(1100px) rotateX(70deg) translate3d(0px, ${gridScroll * 0.5}px, 0)`,
+          transformOrigin: "50% 100%",
+          backgroundImage: `linear-gradient(${withAlpha(palette.cyan, gridAlpha * 0.7)} 1.2px, transparent 1.2px),
+            linear-gradient(90deg, ${withAlpha(palette.cyan, gridAlpha * 0.7)} 1.2px, transparent 1.2px)`,
+          backgroundSize: "160px 160px",
+          maskImage: "linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0))",
+          WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0))",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: "-30%",
+          right: "-30%",
+          top: "-30%",
+          height: "46%",
+          transform: `perspective(1000px) rotateX(-72deg) translate3d(0px, ${-gridScroll * 0.4}px, 0)`,
+          transformOrigin: "50% 0%",
+          backgroundImage: `linear-gradient(${withAlpha(palette.primary, gridAlpha * 0.5)} 1.2px, transparent 1.2px),
+            linear-gradient(90deg, ${withAlpha(palette.primary, gridAlpha * 0.5)} 1.2px, transparent 1.2px)`,
+          backgroundSize: "120px 120px",
+          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0))",
+          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0))",
+          opacity: 0.7,
         }}
       />
 
